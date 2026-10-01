@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { RenameResult } from '../hooks/useHabitStore'
-import { currentStreak } from '../lib/streak'
+import { currentStreak, longestStreak } from '../lib/streak'
 import type { Habit } from '../lib/storage'
 import { Calendar } from './Calendar'
 import { ConfirmDialog } from './ConfirmDialog'
@@ -22,6 +22,7 @@ export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggl
   const renameButtonRef = useRef<HTMLButtonElement>(null)
 
   const streak = currentStreak(new Set(habit.completedDates), today, habit.createdDate)
+  const longest = longestStreak(habit.completedDates, today, habit.createdDate)
 
   useEffect(() => {
     if (!focusRenameButton) return
@@ -75,8 +76,14 @@ export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggl
       </header>
 
       <div className="streak" aria-live="polite">
-        <span className="streak__label">현재 연속</span>
-        <span className="streak__value">{streak}일</span>
+        <div className="streak__item">
+          <span className="streak__label">현재 연속</span>
+          <span className="streak__value">{streak}일</span>
+        </div>
+        <div className="streak__item">
+          <span className="streak__label">최장 연속</span>
+          <span className="streak__value">{longest}일</span>
+        </div>
       </div>
 
       <Calendar habit={habit} today={today} canEdit={canEdit} onToggle={(date) => onToggle(habit.id, date)} />

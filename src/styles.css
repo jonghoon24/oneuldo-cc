@@ -445,11 +445,17 @@ input {
 
 .streak {
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 4px 24px;
   padding: 12px 16px;
   border-radius: var(--radius-small);
   background: var(--color-primary-soft);
+}
+
+.streak__item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .streak__label {
