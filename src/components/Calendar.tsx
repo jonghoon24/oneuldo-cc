@@ -106,17 +106,7 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
                       disabled={locked || !canEdit}
                       onClick={() => onToggle(date)}
                     >
-                      <span className="day__number" aria-hidden="true">
-                        {dayOfMonth(date)}
-                      </span>
-                      <span className="day__mark" aria-hidden="true">
-                        {done ? '✓' : ''}
-                      </span>
-                      {isToday && (
-                        <span className="day__today" aria-hidden="true">
-                          오늘
-                        </span>
-                      )}
+                      <span aria-hidden="true">{dayOfMonth(date)}</span>
                     </button>
                   </td>
                 )
@@ -126,9 +116,20 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
         </tbody>
       </table>
 
-      <p className="calendar__legend">
-        <span aria-hidden="true">✓</span> 완료 · 빈 칸 미완료 · 굵은 테두리 오늘 · 흐린 날짜 선택 불가
-      </p>
+      <ul className="calendar__legend">
+        <li>
+          <span className="legend-swatch legend-swatch--done" aria-hidden="true" />
+          완료
+        </li>
+        <li>
+          <span className="legend-swatch legend-swatch--today" aria-hidden="true" />
+          오늘
+        </li>
+        <li>
+          <span className="legend-swatch legend-swatch--locked" aria-hidden="true" />
+          선택할 수 없는 날
+        </li>
+      </ul>
       {!hasRecordInMonth && <p className="calendar__empty-note">이 달에는 아직 기록이 없어요.</p>}
     </section>
   )
