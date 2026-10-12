@@ -16,10 +16,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev        # 개발 서버
 npm run build      # tsc --noEmit 후 vite build
 npm run typecheck  # 타입 검사만
+npm run lint       # ESLint 검사
 npm run preview    # 빌드 결과 미리보기
 ```
 
-- 테스트 러너와 린터는 없다. 변경 후 검증은 `npm run typecheck`가 기본이다. `tsconfig.json`의 `noUnusedLocals`/`noUnusedParameters` 때문에 쓰지 않는 변수나 매개변수가 있으면 빌드가 실패한다.
+- 테스트 러너는 없다. 변경 후 검증은 `npm run typecheck`와 `npm run lint`가 기본이다. ESLint 설정은 `eslint.config.js`(flat config)에 있고 `@eslint/js`·`typescript-eslint`·`react-hooks`·`react-refresh` 권장 규칙을 쓴다. `tsconfig.json`의 `noUnusedLocals`/`noUnusedParameters` 때문에 쓰지 않는 변수나 매개변수가 있으면 빌드가 실패한다.
 - 개발 서버에서 `?mock`을 붙여 접속하면 저장소가 비어 있을 때 목 습관 4개를 채운다(`src/dev/mockData.ts`). 이미 데이터가 있으면 덮어쓰지 않으므로, 다시 채우려면 먼저 `localStorage`의 `oneuldo` 키를 지운다.
 
 ## 아키텍처

@@ -3,11 +3,12 @@ import { AddHabitForm } from './components/AddHabitForm'
 import { EmptyState } from './components/EmptyState'
 import { ErrorBanner } from './components/ErrorBanner'
 import { HabitDetail } from './components/HabitDetail'
-import { HabitList, habitSelectButtonId } from './components/HabitList'
+import { HabitList } from './components/HabitList'
 import { StorageNotice } from './components/StorageNotice'
 import { useHabitStore } from './hooks/useHabitStore'
 import { useToday } from './hooks/useToday'
 import { formatFullDate } from './lib/date'
+import { habitSelectButtonId } from './lib/domIds'
 
 type FocusTarget = { kind: 'habit'; id: string } | { kind: 'add' }
 
@@ -15,9 +16,10 @@ export default function App() {
   const today = useToday()
   const { state, reload, addHabit, renameHabit, deleteHabit, toggleDate } = useHabitStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [focusTarget, setFocusTarget] = useState<FocusTarget | null>(null)
   const addInputRef = useRef<HTMLInputElement>(null)
   const bannerRef = useRef<HTMLDivElement>(null)
+  // 포커스 요청은 다음 렌더가 끝난 뒤 처리한다. 다시 렌더할 필요가 없으므로 state 대신 ref에 둔다.
+  const focusTargetRef = useRef<FocusTarget | null>(null)
 
   const data = state.data
   const habits = data?.habits ?? []
@@ -31,11 +33,12 @@ export default function App() {
   }, [state])
 
   useEffect(() => {
-    if (!focusTarget) return
-    if (focusTarget.kind === 'add') addInputRef.current?.focus()
-    else document.getElementById(habitSelectButtonId(focusTarget.id))?.focus()
-    setFocusTarget(null)
-  }, [focusTarget])
+    const target = focusTargetRef.current
+    if (!target) return
+    focusTargetRef.current = null
+    if (target.kind === 'add') addInputRef.current?.focus()
+    else document.getElementById(habitSelectButtonId(target.id))?.focus()
+  })
 
   const handleAdd = (name: string) => {
     const result = addHabit(name)
@@ -48,7 +51,7 @@ export default function App() {
     const next = habits[index + 1] ?? habits[index - 1] ?? null
     if (!deleteHabit(id)) return
     setSelectedId(next?.id ?? null)
-    setFocusTarget(next ? { kind: 'habit', id: next.id } : { kind: 'add' })
+    focusTargetRef.current = next ? { kind: 'habit', id: next.id } : { kind: 'add' }
   }
 
   return (

@@ -18,24 +18,28 @@ type Props = {
 export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggle }: Props) {
   const [renaming, setRenaming] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
-  const [focusRenameButton, setFocusRenameButton] = useState(false)
+  const [prevCanEdit, setPrevCanEdit] = useState(canEdit)
   const renameButtonRef = useRef<HTMLButtonElement>(null)
+  // 이름 변경 폼이 닫힌 뒤 다시 나타난 버튼으로 포커스를 돌려줄지 여부
+  const focusRenameButtonRef = useRef(false)
 
   const streak = currentStreak(new Set(habit.completedDates), today, habit.createdDate)
   const longest = longestStreak(habit.completedDates, today, habit.createdDate)
 
   useEffect(() => {
-    if (!focusRenameButton) return
+    if (!focusRenameButtonRef.current) return
+    focusRenameButtonRef.current = false
     renameButtonRef.current?.focus()
-    setFocusRenameButton(false)
-  }, [focusRenameButton])
+  })
 
   // 저장 오류로 편집이 막히면 열려 있던 편집 UI를 닫는다.
-  useEffect(() => {
-    if (canEdit) return
-    setRenaming(false)
-    setConfirmingDelete(false)
-  }, [canEdit])
+  if (canEdit !== prevCanEdit) {
+    setPrevCanEdit(canEdit)
+    if (!canEdit) {
+      setRenaming(false)
+      setConfirmingDelete(false)
+    }
+  }
 
   return (
     <article className="detail" aria-labelledby="habit-detail-title">
@@ -49,7 +53,7 @@ export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggl
             onSubmit={(name) => onRename(habit.id, name)}
             onClose={(reason) => {
               setRenaming(false)
-              if (reason !== 'failed') setFocusRenameButton(true)
+              if (reason !== 'failed') focusRenameButtonRef.current = true
             }}
           />
         ) : (

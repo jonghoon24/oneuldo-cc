@@ -1,3 +1,4 @@
+import { habitSelectButtonId } from '../lib/domIds'
 import { currentStreak } from '../lib/streak'
 import type { Habit } from '../lib/storage'
 
@@ -8,10 +9,6 @@ type Props = {
   canEdit: boolean
   onSelect: (id: string) => void
   onToggleToday: (id: string) => void
-}
-
-export function habitSelectButtonId(id: string): string {
-  return `habit-select-${id}`
 }
 
 export function HabitList({ habits, selectedId, today, canEdit, onSelect, onToggleToday }: Props) {
