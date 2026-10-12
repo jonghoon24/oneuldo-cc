@@ -18,9 +18,12 @@ npm run build      # tsc --noEmit 후 vite build
 npm run typecheck  # 타입 검사만
 npm run lint       # ESLint 검사
 npm run preview    # 빌드 결과 미리보기
+npm run test:e2e   # Playwright E2E 테스트 (예: npx playwright test -g "새로고침")
 ```
 
-- 테스트 러너는 없다. 변경 후 검증은 `npm run typecheck`와 `npm run lint`가 기본이다. ESLint 설정은 `eslint.config.js`(flat config)에 있고 `@eslint/js`·`typescript-eslint`·`react-hooks`·`react-refresh` 권장 규칙을 쓴다. `tsconfig.json`의 `noUnusedLocals`/`noUnusedParameters` 때문에 쓰지 않는 변수나 매개변수가 있으면 빌드가 실패한다.
+- 변경 후 검증은 `npm run typecheck`와 `npm run lint`가 기본이고, 동작이 바뀌는 변경이면 `npm run test:e2e`도 돌린다. 단위 테스트 러너는 없다. ESLint 설정은 `eslint.config.js`(flat config)에 있고 `@eslint/js`·`typescript-eslint`·`react-hooks`·`react-refresh` 권장 규칙을 쓴다. `tsconfig.json`의 `noUnusedLocals`/`noUnusedParameters` 때문에 쓰지 않는 변수나 매개변수가 있으면 빌드가 실패한다.
+- E2E 테스트는 `e2e/`에 있고 Chromium만 쓴다. `playwright.config.ts`가 개발 서버를 5199 포트로 띄우며(이미 떠 있으면 재사용), 시간대를 `Asia/Seoul`로 고정한다. 각 테스트는 `page.clock.setFixedTime`으로 오늘을 2026-03-18(수) 정오로 고정해 어제·그제가 같은 달에 오게 한다. 날짜 칸은 `aria-label`(`2026년 3월 18일 수요일, 오늘`)로, 오늘 토글은 `{습관 이름} 오늘 완료`로 찾는다. 처음 실행하는 환경에서는 `npx playwright install chromium`이 필요하다.
+- `npm run typecheck`는 `src`만 검사한다(`tsconfig.json`의 `include`). `e2e/`와 `playwright.config.ts`는 타입 검사 대상이 아니고, `@types/node`가 없으므로 이 파일들에서 `process` 같은 Node 전역을 쓰지 않는다.
 - 개발 서버에서 `?mock`을 붙여 접속하면 저장소가 비어 있을 때 목 습관 4개를 채운다(`src/dev/mockData.ts`). 이미 데이터가 있으면 덮어쓰지 않으므로, 다시 채우려면 먼저 `localStorage`의 `oneuldo` 키를 지운다.
 
 ## 아키텍처
