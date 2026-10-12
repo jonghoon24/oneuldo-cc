@@ -11,6 +11,10 @@ import {
 } from '../lib/date'
 import type { Habit } from '../lib/storage'
 
+// 등록일 이전도 체크할 수 있으므로 과거 방향으로는 사실상 제한하지 않는다.
+// YYYY 네 자리 형식이 깨지지 않도록 하한만 둔다.
+const MIN_MONTH = '1900-01'
+
 type Props = {
   habit: Habit
   today: string
@@ -30,14 +34,12 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
   const [viewMonth, setViewMonth] = useState<string | null>(null)
 
   const currentMonth = monthOf(today)
-  const createdMonth = monthOf(habit.createdDate)
-  const minMonth = createdMonth < currentMonth ? createdMonth : currentMonth
-  const shownMonth = clampMonth(viewMonth ?? currentMonth, minMonth, currentMonth)
-  const canGoPrev = shownMonth > minMonth
+  const shownMonth = clampMonth(viewMonth ?? currentMonth, MIN_MONTH, currentMonth)
+  const canGoPrev = shownMonth > MIN_MONTH
   const canGoNext = shownMonth < currentMonth
 
   const move = (delta: number) => {
-    const next = clampMonth(addMonths(shownMonth, delta), minMonth, currentMonth)
+    const next = clampMonth(addMonths(shownMonth, delta), MIN_MONTH, currentMonth)
     setViewMonth(next === currentMonth ? null : next)
   }
 
@@ -88,22 +90,19 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
                 if (!date) return <td key={`empty-${dayIndex}`} className="calendar__empty" />
                 const done = completed.has(date)
                 const isToday = date === today
-                const beforeCreated = date < habit.createdDate
                 const future = date > today
-                const locked = beforeCreated || future
-                const reason = beforeCreated ? ', 등록일 이전' : future ? ', 미래 날짜' : ''
                 const classNames = ['day']
                 if (done) classNames.push('day--done')
                 if (isToday) classNames.push('day--today')
-                if (locked) classNames.push('day--locked')
+                if (future) classNames.push('day--locked')
                 return (
                   <td key={date}>
                     <button
                       type="button"
                       className={classNames.join(' ')}
                       aria-pressed={done}
-                      aria-label={`${formatFullDate(date)}${isToday ? ', 오늘' : ''}${reason}`}
-                      disabled={locked || !canEdit}
+                      aria-label={`${formatFullDate(date)}${isToday ? ', 오늘' : ''}${future ? ', 미래 날짜' : ''}`}
+                      disabled={future || !canEdit}
                       onClick={() => onToggle(date)}
                     >
                       <span aria-hidden="true">{dayOfMonth(date)}</span>

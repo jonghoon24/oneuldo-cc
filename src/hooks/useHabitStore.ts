@@ -116,7 +116,7 @@ export function useHabitStore() {
     (id: string, date: string): boolean =>
       commit((data) => {
         const target = data.habits.find((habit) => habit.id === id)
-        if (!target || date < target.createdDate || date > todayKey()) return null
+        if (!target || date > todayKey()) return null
         const completed = new Set(target.completedDates)
         if (completed.has(date)) completed.delete(date)
         else completed.add(date)

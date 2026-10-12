@@ -17,7 +17,7 @@ export function HabitList({ habits, selectedId, today, canEdit, onSelect, onTogg
       {habits.map((habit) => {
         const completed = new Set(habit.completedDates)
         const doneToday = completed.has(today)
-        const streak = currentStreak(completed, today, habit.createdDate)
+        const streak = currentStreak(completed, today)
         const selected = habit.id === selectedId
         return (
           <li key={habit.id} className={selected ? 'habit-item habit-item--selected' : 'habit-item'}>
@@ -36,7 +36,7 @@ export function HabitList({ habits, selectedId, today, canEdit, onSelect, onTogg
               className={doneToday ? 'today-toggle today-toggle--done' : 'today-toggle'}
               aria-pressed={doneToday}
               aria-label={`${habit.name} 오늘 완료`}
-              disabled={!canEdit || today < habit.createdDate}
+              disabled={!canEdit}
               onClick={() => onToggleToday(habit.id)}
             >
               <span className="today-toggle__icon" aria-hidden="true">

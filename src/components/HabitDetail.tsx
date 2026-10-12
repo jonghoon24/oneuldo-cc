@@ -23,8 +23,8 @@ export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggl
   // 이름 변경 폼이 닫힌 뒤 다시 나타난 버튼으로 포커스를 돌려줄지 여부
   const focusRenameButtonRef = useRef(false)
 
-  const streak = currentStreak(new Set(habit.completedDates), today, habit.createdDate)
-  const longest = longestStreak(habit.completedDates, today, habit.createdDate)
+  const streak = currentStreak(new Set(habit.completedDates), today)
+  const longest = longestStreak(habit.completedDates, today)
 
   useEffect(() => {
     if (!focusRenameButtonRef.current) return
