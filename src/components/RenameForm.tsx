@@ -13,14 +13,11 @@ import { HABIT_NAME_MAX_LENGTH, NAME_ERROR_LINE_BREAK, hasLineBreak, nameLength 
 type Props = {
   initialName: string
   onSubmit: (name: string) => RenameResult
-  /** saved: 저장했거나 바뀐 것이 없음, cancelled: 사용자가 취소함, failed: 저장소 쓰기 실패 */
-  onClose: (reason: 'saved' | 'cancelled' | 'failed') => void
+  onClose: () => void
 }
 
 export function RenameForm({ initialName, onSubmit, onClose }: Props) {
   const inputId = useId()
-  const errorId = useId()
-  const counterId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
   const composingRef = useRef(false)
   const [value, setValue] = useState(initialName)
@@ -37,9 +34,8 @@ export function RenameForm({ initialName, onSubmit, onClose }: Props) {
     event.preventDefault()
     if (composingRef.current) return
     const result = onSubmit(value)
-    if (result.ok) onClose('saved')
-    else if (result.message) setError(result.message)
-    else onClose('failed')
+    if (result.ok || !result.message) onClose()
+    else setError(result.message)
   }
 
   const rejectLineBreak = (text: string, event: ClipboardEvent | DragEvent) => {
@@ -56,22 +52,14 @@ export function RenameForm({ initialName, onSubmit, onClose }: Props) {
       <input
         ref={inputRef}
         id={inputId}
-        className="text-input"
+        className={error ? 'text-input text-input--invalid' : 'text-input'}
         type="text"
         value={value}
         autoComplete="off"
         enterKeyHint="done"
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${errorId} ${counterId}` : counterId}
         onChange={(event) => {
           setValue(event.target.value)
           setError(null)
-        }}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape' && !event.nativeEvent.isComposing) {
-            event.preventDefault()
-            onClose('cancelled')
-          }
         }}
         onCompositionStart={() => {
           composingRef.current = true
@@ -84,17 +72,11 @@ export function RenameForm({ initialName, onSubmit, onClose }: Props) {
       />
       <div className="field-meta">
         {error ? (
-          <p id={errorId} className="field-error" role="alert">
-            {error}
-          </p>
+          <p className="field-error">{error}</p>
         ) : (
           <span />
         )}
-        <span
-          id={counterId}
-          className={length > HABIT_NAME_MAX_LENGTH ? 'counter counter--over' : 'counter'}
-        >
-          <span className="visually-hidden">글자 수 </span>
+        <span className={length > HABIT_NAME_MAX_LENGTH ? 'counter counter--over' : 'counter'}>
           {length}/{HABIT_NAME_MAX_LENGTH}
         </span>
       </div>
@@ -102,7 +84,7 @@ export function RenameForm({ initialName, onSubmit, onClose }: Props) {
         <button type="submit" className="button button--primary">
           저장
         </button>
-        <button type="button" className="button" onClick={() => onClose('cancelled')}>
+        <button type="button" className="button" onClick={onClose}>
           취소
         </button>
       </div>

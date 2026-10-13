@@ -1,4 +1,3 @@
-import { habitSelectButtonId } from '../lib/domIds'
 import { currentStreak } from '../lib/streak'
 import type { Habit } from '../lib/storage'
 
@@ -23,9 +22,7 @@ export function HabitList({ habits, selectedId, today, canEdit, onSelect, onTogg
           <li key={habit.id} className={selected ? 'habit-item habit-item--selected' : 'habit-item'}>
             <button
               type="button"
-              id={habitSelectButtonId(habit.id)}
               className="habit-item__select"
-              aria-current={selected ? 'true' : undefined}
               onClick={() => onSelect(habit.id)}
             >
               <span className="habit-item__name">{habit.name}</span>
@@ -34,17 +31,11 @@ export function HabitList({ habits, selectedId, today, canEdit, onSelect, onTogg
             <button
               type="button"
               className={doneToday ? 'today-toggle today-toggle--done' : 'today-toggle'}
-              aria-pressed={doneToday}
-              aria-label={`${habit.name} 오늘 완료`}
               disabled={!canEdit}
               onClick={() => onToggleToday(habit.id)}
             >
-              <span className="today-toggle__icon" aria-hidden="true">
-                {doneToday ? '✓' : ''}
-              </span>
-              <span className="today-toggle__text" aria-hidden="true">
-                {doneToday ? '완료' : '미완료'}
-              </span>
+              <span className="today-toggle__icon">{doneToday ? '✓' : ''}</span>
+              <span className="today-toggle__text">{doneToday ? '완료' : '미완료'}</span>
             </button>
           </li>
         )

@@ -1,4 +1,3 @@
-import type { Ref } from 'react'
 import type { StoreErrorReason } from '../hooks/useHabitStore'
 
 const MESSAGES: Record<StoreErrorReason, { title: string; body: string }> = {
@@ -19,13 +18,12 @@ const MESSAGES: Record<StoreErrorReason, { title: string; body: string }> = {
 type Props = {
   reason: StoreErrorReason
   onReload: () => void
-  ref?: Ref<HTMLDivElement>
 }
 
-export function ErrorBanner({ reason, onReload, ref }: Props) {
+export function ErrorBanner({ reason, onReload }: Props) {
   const message = MESSAGES[reason]
   return (
-    <div ref={ref} className="error-banner" role="alert" tabIndex={-1}>
+    <div className="error-banner">
       <div>
         <p className="error-banner__title">{message.title}</p>
         <p className="error-banner__body">{message.body}</p>

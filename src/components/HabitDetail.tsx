@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
 import type { RenameResult } from '../hooks/useHabitStore'
 import { currentStreak, longestStreak } from '../lib/streak'
 import type { Habit } from '../lib/storage'
@@ -19,18 +19,9 @@ export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggl
   const [renaming, setRenaming] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [prevCanEdit, setPrevCanEdit] = useState(canEdit)
-  const renameButtonRef = useRef<HTMLButtonElement>(null)
-  // 이름 변경 폼이 닫힌 뒤 다시 나타난 버튼으로 포커스를 돌려줄지 여부
-  const focusRenameButtonRef = useRef(false)
 
   const streak = currentStreak(new Set(habit.completedDates), today)
   const longest = longestStreak(habit.completedDates, today)
-
-  useEffect(() => {
-    if (!focusRenameButtonRef.current) return
-    focusRenameButtonRef.current = false
-    renameButtonRef.current?.focus()
-  })
 
   // 저장 오류로 편집이 막히면 열려 있던 편집 UI를 닫는다.
   if (canEdit !== prevCanEdit) {
@@ -42,24 +33,18 @@ export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggl
   }
 
   return (
-    <article className="detail" aria-labelledby="habit-detail-title">
+    <article className="detail">
       <header className="detail__header">
-        <h2 id="habit-detail-title" className="detail__title">
-          {habit.name}
-        </h2>
+        <h2 className="detail__title">{habit.name}</h2>
         {renaming ? (
           <RenameForm
             initialName={habit.name}
             onSubmit={(name) => onRename(habit.id, name)}
-            onClose={(reason) => {
-              setRenaming(false)
-              if (reason !== 'failed') focusRenameButtonRef.current = true
-            }}
+            onClose={() => setRenaming(false)}
           />
         ) : (
           <div className="button-row">
             <button
-              ref={renameButtonRef}
               type="button"
               className="button"
               onClick={() => setRenaming(true)}
@@ -79,7 +64,7 @@ export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggl
         )}
       </header>
 
-      <div className="streak" aria-live="polite">
+      <div className="streak">
         <div className="streak__item">
           <span className="streak__label">현재 연속</span>
           <span className="streak__value">{streak}일</span>

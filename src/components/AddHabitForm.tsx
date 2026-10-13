@@ -15,8 +15,6 @@ type Props = {
 
 export function AddHabitForm({ disabled, onAdd, inputRef }: Props) {
   const inputId = useId()
-  const errorId = useId()
-  const counterId = useId()
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
   const composingRef = useRef(false)
@@ -52,15 +50,13 @@ export function AddHabitForm({ disabled, onAdd, inputRef }: Props) {
         <input
           ref={inputRef}
           id={inputId}
-          className="text-input"
+          className={error ? 'text-input text-input--invalid' : 'text-input'}
           type="text"
           value={value}
           placeholder="예: 물 2잔 마시기"
           autoComplete="off"
           enterKeyHint="done"
           disabled={disabled}
-          aria-invalid={error ? true : undefined}
-          aria-describedby={error ? `${errorId} ${counterId}` : counterId}
           onChange={(event) => {
             setValue(event.target.value)
             setError(null)
@@ -80,14 +76,11 @@ export function AddHabitForm({ disabled, onAdd, inputRef }: Props) {
       </div>
       <div className="field-meta">
         {error ? (
-          <p id={errorId} className="field-error" role="alert">
-            {error}
-          </p>
+          <p className="field-error">{error}</p>
         ) : (
           <span />
         )}
-        <span id={counterId} className={overLimit ? 'counter counter--over' : 'counter'}>
-          <span className="visually-hidden">글자 수 </span>
+        <span className={overLimit ? 'counter counter--over' : 'counter'}>
           {length}/{HABIT_NAME_MAX_LENGTH}
         </span>
       </div>

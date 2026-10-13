@@ -1,10 +1,9 @@
-import { useId, useState } from 'react'
+import { useState } from 'react'
 import {
   WEEKDAY_HEADERS,
   addMonths,
   clampMonth,
   dayOfMonth,
-  formatFullDate,
   formatMonth,
   getMonthCells,
   monthOf,
@@ -29,7 +28,6 @@ function chunkWeeks<T>(cells: T[]): T[][] {
 }
 
 export function Calendar({ habit, today, canEdit, onToggle }: Props) {
-  const titleId = useId()
   // null이면 현재 달을 따라간다. 자정이 지나 달이 바뀌어도 현재 달을 보던 화면은 새 달로 넘어간다.
   const [viewMonth, setViewMonth] = useState<string | null>(null)
 
@@ -48,28 +46,26 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
   const hasRecordInMonth = habit.completedDates.some((date) => monthOf(date) === shownMonth)
 
   return (
-    <section className="calendar" aria-labelledby={titleId}>
+    <section className="calendar">
       <div className="calendar__header">
         <button
           type="button"
-          className="button button--icon"
+          className="button button--icon calendar__prev"
           onClick={() => move(-1)}
           disabled={!canGoPrev}
-          aria-label="이전 달"
+          title="이전 달"
         >
-          <span aria-hidden="true">‹</span>
+          ‹
         </button>
-        <h3 id={titleId} className="calendar__title" aria-live="polite">
-          {formatMonth(shownMonth)}
-        </h3>
+        <h3 className="calendar__title">{formatMonth(shownMonth)}</h3>
         <button
           type="button"
-          className="button button--icon"
+          className="button button--icon calendar__next"
           onClick={() => move(1)}
           disabled={!canGoNext}
-          aria-label="다음 달"
+          title="다음 달"
         >
-          <span aria-hidden="true">›</span>
+          ›
         </button>
       </div>
 
@@ -77,9 +73,7 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
         <thead>
           <tr>
             {WEEKDAY_HEADERS.map((weekday) => (
-              <th key={weekday} scope="col" abbr={`${weekday}요일`}>
-                {weekday}
-              </th>
+              <th key={weekday}>{weekday}</th>
             ))}
           </tr>
         </thead>
@@ -100,12 +94,11 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
                     <button
                       type="button"
                       className={classNames.join(' ')}
-                      aria-pressed={done}
-                      aria-label={`${formatFullDate(date)}${isToday ? ', 오늘' : ''}${future ? ', 미래 날짜' : ''}`}
+                      data-date={date}
                       disabled={future || !canEdit}
                       onClick={() => onToggle(date)}
                     >
-                      <span aria-hidden="true">{dayOfMonth(date)}</span>
+                      {dayOfMonth(date)}
                     </button>
                   </td>
                 )
@@ -117,15 +110,15 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
 
       <ul className="calendar__legend">
         <li>
-          <span className="legend-swatch legend-swatch--done" aria-hidden="true" />
+          <span className="legend-swatch legend-swatch--done" />
           완료
         </li>
         <li>
-          <span className="legend-swatch legend-swatch--today" aria-hidden="true" />
+          <span className="legend-swatch legend-swatch--today" />
           오늘
         </li>
         <li>
-          <span className="legend-swatch legend-swatch--locked" aria-hidden="true" />
+          <span className="legend-swatch legend-swatch--locked" />
           선택할 수 없는 날
         </li>
       </ul>
