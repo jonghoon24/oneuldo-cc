@@ -465,6 +465,13 @@ input {
   font-size: 1.1rem;
 }
 
+.calendar__rate {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .calendar__grid {
   width: 100%;
   table-layout: fixed;

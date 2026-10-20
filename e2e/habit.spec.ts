@@ -32,6 +32,18 @@ function habitSelectButton(page: Page, name: string) {
   return page.locator('.habit-item__select', { hasText: name })
 }
 
+function monthlyRate(page: Page) {
+  return page.locator('.calendar__rate')
+}
+
+function marchDate(day: number) {
+  return `2026-03-${String(day).padStart(2, '0')}`
+}
+
+function februaryDate(day: number) {
+  return `2026-02-${String(day).padStart(2, '0')}`
+}
+
 test('습관을 등록하고 오늘을 체크하면 연속 1일이 되고, 다시 누르면 해제되어 0일이 된다', async ({ page }) => {
   await addHabit(page, '물 마시기')
   const toggle = todayToggle(page, '물 마시기')
@@ -78,6 +90,7 @@ test('체크한 뒤 새로고침해도 체크 기록과 연속 일수가 남아 
   await dayButton(page, YESTERDAY).click()
   await dayButton(page, TODAY).click()
   await expect(currentStreak(page)).toHaveText('2일')
+  await expect(monthlyRate(page)).toHaveText('달성률 11% (2/18일)')
 
   await page.reload()
 
@@ -87,6 +100,40 @@ test('체크한 뒤 새로고침해도 체크 기록과 연속 일수가 남아 
   await expect(todayToggle(page, '물 마시기')).toHaveClass(/today-toggle--done/)
   await expect(currentStreak(page)).toHaveText('2일')
   await expect(habitSelectButton(page, '물 마시기')).toContainText('연속 2일')
+  await expect(monthlyRate(page)).toHaveText('달성률 11% (2/18일)')
+})
+
+test('이번 달 날짜를 체크하거나 해제하면 달성률이 바로 바뀐다', async ({ page }) => {
+  await addHabit(page, '물 마시기')
+  await expect(monthlyRate(page)).toHaveText('달성률 0% (0/18일)')
+
+  // 3월 1일~12일은 등록일(오늘) 이전이지만 체크할 수 있고 분자에 들어간다.
+  for (let day = 1; day <= 12; day++) await dayButton(page, marchDate(day)).click()
+  await expect(monthlyRate(page)).toHaveText('달성률 67% (12/18일)')
+
+  await dayButton(page, marchDate(12)).click()
+  await expect(monthlyRate(page)).toHaveText('달성률 61% (11/18일)')
+
+  // 목록의 오늘 체크 버튼도 달력의 달성률에 반영된다.
+  await todayToggle(page, '물 마시기').click()
+  await expect(monthlyRate(page)).toHaveText('달성률 67% (12/18일)')
+})
+
+test('이전 달로 이동하면 그 달 전체 일수 기준으로, 돌아오면 이번 달 기준으로 달성률을 보여준다', async ({ page }) => {
+  await addHabit(page, '물 마시기')
+  await dayButton(page, YESTERDAY).click()
+  await expect(monthlyRate(page)).toHaveText('달성률 6% (1/18일)')
+
+  await page.getByTitle('이전 달').click()
+  await expect(page.locator('.calendar__title')).toHaveText('2026년 2월')
+  await expect(monthlyRate(page)).toHaveText('달성률 0% (0/28일)')
+
+  for (let day = 1; day <= 20; day++) await dayButton(page, februaryDate(day)).click()
+  await expect(monthlyRate(page)).toHaveText('달성률 71% (20/28일)')
+
+  await page.getByTitle('다음 달').click()
+  await expect(page.locator('.calendar__title')).toHaveText('2026년 3월')
+  await expect(monthlyRate(page)).toHaveText('달성률 6% (1/18일)')
 })
 
 test('습관을 삭제하면 확인 창을 거쳐 목록에서 사라지고 다음 습관이 선택된다', async ({ page }) => {

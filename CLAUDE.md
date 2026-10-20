@@ -8,7 +8,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 새 라이브러리(npm 패키지)를 설치하거나 `package.json`에 의존성을 추가하기 전에는 반드시 먼저 사용자에게 물어본다.
 
-1차 버전 스펙(`SPEC.md`)은 삭제되었지만 git 기록에 남아 있다: `git show fc34b05^:SPEC.md`
+`SPEC.md`는 기능 하나를 구현하는 동안만 루트에 두는 임시 스펙이다. 커밋하지 않고 구현이 끝나면 삭제하므로, 오래 지켜야 할 규칙은 이 문서에 옮겨 적는다. 1차 버전 스펙만 git 기록에 남아 있다: `git show fc34b05^:SPEC.md`
 
 ## 명령어
 
@@ -50,6 +50,7 @@ npm run test:e2e   # Playwright E2E 테스트 (예: npx playwright test -g "새�
 ### 도메인 규칙
 - 체크 가능한 날짜는 `date ≤ 오늘`이다. 등록일(`createdDate`) 이전 날짜도 체크할 수 있고 연속 일수에도 포함된다. 이 조건은 `toggleDate`와 `Calendar` UI 양쪽에서 막는다. 달력은 `1900-01`까지 거슬러 갈 수 있다.
 - 현재 연속 일수(`lib/streak.ts`): 오늘이 체크되어 있으면 오늘부터, 아니면 어제부터 과거로 끊기지 않은 날을 센다.
+- 월간 달성률(`lib/monthlyRate.ts`): 달력에서 보고 있는 달 기준으로 `체크한 날 수 ÷ 체크할 수 있었던 날 수`를 반올림한 정수 퍼센트로 표시한다. 분모는 그 달 1일부터 말일과 오늘 중 이른 날까지(오늘은 체크 여부와 관계없이 포함)이고, 등록일과 관계없이 항상 1일부터 센다. 달력이 미래 달로 갈 수 없다는 전제로 이번 달이 아니면 그 달 전체 일수를 쓴다.
 - 습관 이름(`lib/habitName.ts`): trim 후 NFC 정규화, 줄바꿈 불가, 코드 포인트 기준 20자 이하, 정규화한 이름끼리 중복 불가. 저장소 로드 검증도 같은 함수를 쓴다.
 
 ### UI

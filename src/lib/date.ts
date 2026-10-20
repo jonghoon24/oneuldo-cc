@@ -61,14 +61,20 @@ export function clampMonth(monthKey: string, min: string, max: string): string {
   return monthKey
 }
 
+/** 그 달의 일수. 윤년 2월은 29일이다. */
+export function daysInMonth(monthKey: string): number {
+  const [year, month] = monthKey.split('-').map(Number)
+  return new Date(year, month, 0, 12).getDate()
+}
+
 /** 월요일 시작 달력 칸. 해당 달이 아닌 칸은 null이다. */
 export function getMonthCells(monthKey: string): (string | null)[] {
   const [year, month] = monthKey.split('-').map(Number)
   const first = new Date(year, month - 1, 1, 12)
-  const daysInMonth = new Date(year, month, 0, 12).getDate()
+  const lastDay = daysInMonth(monthKey)
   const leading = (first.getDay() + 6) % 7
   const cells: (string | null)[] = Array.from({ length: leading }, () => null)
-  for (let day = 1; day <= daysInMonth; day++) {
+  for (let day = 1; day <= lastDay; day++) {
     cells.push(`${monthKey}-${pad2(day)}`)
   }
   while (cells.length % 7 !== 0) cells.push(null)

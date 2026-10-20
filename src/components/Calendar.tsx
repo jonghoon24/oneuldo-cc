@@ -8,6 +8,7 @@ import {
   getMonthCells,
   monthOf,
 } from '../lib/date'
+import { monthlyRate } from '../lib/monthlyRate'
 import type { Habit } from '../lib/storage'
 
 // 등록일 이전도 체크할 수 있으므로 과거 방향으로는 사실상 제한하지 않는다.
@@ -44,6 +45,7 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
   const completed = new Set(habit.completedDates)
   const weeks = chunkWeeks(getMonthCells(shownMonth))
   const hasRecordInMonth = habit.completedDates.some((date) => monthOf(date) === shownMonth)
+  const rate = monthlyRate(habit.completedDates, shownMonth, today)
 
   return (
     <section className="calendar">
@@ -68,6 +70,9 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
           ›
         </button>
       </div>
+      <p className="calendar__rate">
+        달성률 {rate.percent}% ({rate.done}/{rate.total}일)
+      </p>
 
       <table className="calendar__grid">
         <thead>
