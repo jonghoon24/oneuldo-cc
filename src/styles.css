@@ -427,17 +427,11 @@ input {
 
 .streak {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px 24px;
+  align-items: baseline;
+  gap: 8px;
   padding: 12px 16px;
   border-radius: var(--radius-small);
   background: var(--color-primary-soft);
-}
-
-.streak__item {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
 }
 
 .streak__label {
@@ -474,109 +468,90 @@ input {
 .calendar__grid {
   width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 3px;
 }
 
 .calendar__grid th {
-  padding: 4px 0 8px;
+  padding: 4px 0;
   font-size: 0.8rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--color-muted);
 }
 
 .calendar__grid td {
-  padding: 3px 0;
-  text-align: center;
+  padding: 0;
 }
 
 .day {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
   width: 100%;
-  max-width: 44px;
-  aspect-ratio: 1;
-  padding: 0;
-  border: 0;
-  border-radius: 50%;
-  background: transparent;
-  font-size: 0.95rem;
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1px;
+  padding: 4px 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
   cursor: pointer;
-  transition: background-color 0.15s;
+  line-height: 1.2;
 }
 
 .day:hover:not(:disabled) {
-  background: var(--color-primary-soft);
+  border-color: var(--color-primary);
+}
+
+.day__number {
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.day__mark {
+  min-height: 1em;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.day__today {
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.day--done {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
 }
 
 .day--today {
-  box-shadow: inset 0 0 0 2px var(--color-primary);
-  color: var(--color-primary-strong);
-  font-weight: 700;
-}
-
-.day--done,
-.day--done:hover:not(:disabled) {
-  background: var(--color-primary);
-  color: #fff;
-  font-weight: 700;
-}
-
-/* 완료한 오늘은 채운 원 바깥에 고리를 한 겹 더 둘러 구분한다. */
-.day--done.day--today {
-  box-shadow:
-    inset 0 0 0 2px var(--color-primary),
-    inset 0 0 0 4px var(--color-surface);
+  border: 3px solid var(--color-text);
+  padding: 2px 0;
 }
 
 .day--locked {
   cursor: not-allowed;
   color: #9a9a94;
+  border-style: dashed;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-locked),
+    var(--color-locked) 4px,
+    var(--color-surface) 4px,
+    var(--color-surface) 8px
+  );
 }
 
 .day--locked.day--done {
-  background: var(--color-primary-soft);
   color: var(--color-primary);
 }
 
 .day:disabled:not(.day--locked) {
   cursor: not-allowed;
   opacity: 0.6;
-}
-
-.calendar__legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-  padding: 0;
-  list-style: none;
-}
-
-.calendar__legend li {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.legend-swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.legend-swatch--done {
-  background: var(--color-primary);
-}
-
-.legend-swatch--today {
-  box-shadow: inset 0 0 0 2px var(--color-primary);
-}
-
-.legend-swatch--locked {
-  background: #d6d5cf;
 }
 
 .calendar__legend,

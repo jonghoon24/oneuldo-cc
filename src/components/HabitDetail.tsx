@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { RenameResult } from '../hooks/useHabitStore'
-import { currentStreak, longestStreak } from '../lib/streak'
+import { currentStreak } from '../lib/streak'
 import type { Habit } from '../lib/storage'
 import { Calendar } from './Calendar'
 import { ConfirmDialog } from './ConfirmDialog'
@@ -21,7 +21,6 @@ export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggl
   const [prevCanEdit, setPrevCanEdit] = useState(canEdit)
 
   const streak = currentStreak(new Set(habit.completedDates), today)
-  const longest = longestStreak(habit.completedDates, today)
 
   // 저장 오류로 편집이 막히면 열려 있던 편집 UI를 닫는다.
   if (canEdit !== prevCanEdit) {
@@ -65,14 +64,8 @@ export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggl
       </header>
 
       <div className="streak">
-        <div className="streak__item">
-          <span className="streak__label">현재 연속</span>
-          <span className="streak__value">{streak}일</span>
-        </div>
-        <div className="streak__item">
-          <span className="streak__label">최장 연속</span>
-          <span className="streak__value">{longest}일</span>
-        </div>
+        <span className="streak__label">현재 연속</span>
+        <span className="streak__value">{streak}일</span>
       </div>
 
       <Calendar habit={habit} today={today} canEdit={canEdit} onToggle={(date) => onToggle(habit.id, date)} />

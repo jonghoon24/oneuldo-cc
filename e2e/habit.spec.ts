@@ -25,7 +25,7 @@ function todayToggle(page: Page, name: string) {
 }
 
 function currentStreak(page: Page) {
-  return page.locator('.streak__item', { hasText: '현재 연속' }).locator('.streak__value')
+  return page.locator('.streak__value')
 }
 
 function habitSelectButton(page: Page, name: string) {

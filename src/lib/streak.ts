@@ -13,20 +13,3 @@ export function currentStreak(completed: ReadonlySet<string>, today: string): nu
   }
   return count
 }
-
-/**
- * 최장 연속 실천 일수.
- * 체크 가능한 기간(오늘 이전) 안에서 끊기지 않고 이어진 가장 긴 구간의 길이다.
- */
-export function longestStreak(completedDates: readonly string[], today: string): number {
-  let longest = 0
-  let count = 0
-  let previous: string | null = null
-  for (const day of completedDates) {
-    if (day > today) continue
-    count = previous !== null && addDays(previous, 1) === day ? count + 1 : 1
-    longest = Math.max(longest, count)
-    previous = day
-  }
-  return longest
-}
