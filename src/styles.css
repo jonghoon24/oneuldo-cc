@@ -1,26 +1,18 @@
-/*
- * 볼펜으로 체크하는 플래너 한 장.
- * 달력은 모눈처럼 선을 공유하는 한 장의 표이고, 완료한 날만 볼펜 파랑으로 채운다.
- * 강조색은 이 파랑 하나만 쓰고 나머지는 잉크색과 회색으로 조용히 둔다.
- */
-
 :root {
-  --color-bg: #f4f5f8;
+  --color-bg: #f6f5f1;
   --color-surface: #ffffff;
-  --color-text: #1c2033;
-  --color-muted: #686e80;
-  --color-faint: #a9aebb;
-  --color-line: #dce0e8;
-  --color-line-strong: #c3c9d5;
-  --color-ink: #2b47c9;
-  --color-ink-strong: #1f37a3;
-  --color-ink-soft: #e9edfb;
-  --color-danger: #c2341f;
-  --color-danger-soft: #fcefec;
-  --color-locked: #f1f2f5;
-  --radius-sheet: 18px;
-  --radius: 10px;
+  --color-text: #1f2328;
+  --color-muted: #5f6670;
+  --color-border: #d9d6ce;
+  --color-primary: #2f6b4f;
+  --color-primary-strong: #245740;
+  --color-primary-soft: #e3f0e8;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-locked: #ecebe6;
+  --radius: 12px;
   --radius-small: 8px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.06);
 
   color-scheme: light;
   font-family:
@@ -30,8 +22,6 @@
   color: var(--color-text);
   background: var(--color-bg);
   -webkit-text-size-adjust: 100%;
-  word-break: keep-all;
-  overflow-wrap: break-word;
 }
 
 *,
@@ -60,20 +50,15 @@ input {
   color: inherit;
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-ink);
-  outline-offset: 2px;
-}
-
 /* 앱 뼈대 */
 
 .app {
-  max-width: 1040px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 28px 16px 48px;
+  padding: 20px 16px 40px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .app-header {
@@ -81,19 +66,19 @@ input {
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
-  gap: 4px 16px;
+  gap: 4px 12px;
 }
 
 .app-header__title {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--color-primary);
 }
 
 .app-header__today {
   color: var(--color-muted);
-  font-variant-numeric: tabular-nums;
+  font-size: 0.95rem;
 }
 
 .app-header__today-label {
@@ -102,8 +87,12 @@ input {
 }
 
 .storage-notice {
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: var(--color-muted);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-small);
+  padding: 8px 12px;
 }
 
 .error-banner {
@@ -111,39 +100,48 @@ input {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px 16px;
-  padding: 14px 16px;
-  border-left: 4px solid var(--color-danger);
-  border-radius: var(--radius-small);
+  gap: 12px;
+  padding: 12px 16px;
+  border: 2px solid var(--color-danger);
+  border-radius: var(--radius);
   background: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 
 .error-banner__title {
   font-weight: 700;
-  color: var(--color-danger);
+}
+
+.error-banner__title::before {
+  content: '⚠ ';
+  content: '⚠ ' / '';
 }
 
 .error-banner__body {
+  color: var(--color-text);
   font-size: 0.9rem;
 }
 
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
+  gap: 16px;
   align-items: start;
-  margin-top: 4px;
 }
 
-@media (min-width: 800px) {
+@media (min-width: 768px) {
   .layout {
-    grid-template-columns: minmax(260px, 1fr) minmax(0, 1.75fr);
-    gap: 32px;
+    grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr);
   }
 }
 
 .panel {
   min-width: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
 }
 
 .panel--list {
@@ -157,22 +155,10 @@ input {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  min-height: 44px;
 }
 
 .panel__title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-muted);
-}
-
-.panel--detail {
-  background: var(--color-surface);
-  border-radius: var(--radius-sheet);
-  box-shadow:
-    0 0 0 1px var(--color-line),
-    0 12px 32px -20px rgb(28 32 51 / 0.35);
-  padding: 24px;
+  font-size: 1.1rem;
 }
 
 /* 버튼과 입력 */
@@ -184,7 +170,7 @@ input {
   gap: 4px;
   min-height: 44px;
   padding: 0 16px;
-  border: 1px solid var(--color-line-strong);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-small);
   background: var(--color-surface);
   font-weight: 600;
@@ -193,60 +179,48 @@ input {
 }
 
 .button:hover:not(:disabled) {
-  border-color: var(--color-text);
+  background: var(--color-bg);
 }
 
 .button:disabled {
   cursor: not-allowed;
-  opacity: 0.45;
+  opacity: 0.5;
 }
 
 .button--primary {
-  border-color: var(--color-text);
-  background: var(--color-text);
-  color: var(--color-surface);
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
 }
 
 .button--primary:hover:not(:disabled) {
-  background: #33395a;
+  background: var(--color-primary-strong);
 }
 
 .button--danger {
   border-color: var(--color-danger);
   background: var(--color-danger);
-  color: var(--color-surface);
+  color: #fff;
 }
 
 .button--danger:hover:not(:disabled) {
-  border-color: #9e2817;
-  background: #9e2817;
+  background: #912018;
 }
 
 .button--danger-outline {
+  border-color: var(--color-danger);
   color: var(--color-danger);
 }
 
 .button--danger-outline:hover:not(:disabled) {
-  border-color: var(--color-danger);
   background: var(--color-danger-soft);
 }
 
 .button--icon {
   width: 44px;
   padding: 0;
-  border-color: transparent;
-  background: transparent;
   font-size: 1.5rem;
   line-height: 1;
-}
-
-.button--icon:hover:not(:disabled) {
-  border-color: transparent;
-  background: var(--color-bg);
-}
-
-.button--icon:disabled {
-  opacity: 0.25;
 }
 
 .button-row {
@@ -261,9 +235,9 @@ input {
 
 .field-label {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 700;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .text-input {
@@ -271,24 +245,18 @@ input {
   min-width: 0;
   min-height: 44px;
   padding: 8px 12px;
-  border: 1px solid var(--color-line-strong);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-small);
   background: var(--color-surface);
 }
 
-.text-input:hover {
-  border-color: var(--color-muted);
+.text-input--invalid {
+  border: 2px solid var(--color-danger);
 }
 
-.text-input:focus-visible {
-  outline-offset: 0;
-  border-color: var(--color-ink);
-}
-
-.text-input--invalid,
-.text-input--invalid:hover {
-  border-color: var(--color-danger);
-  box-shadow: 0 0 0 1px var(--color-danger);
+.text-input:disabled {
+  background: var(--color-locked);
+  cursor: not-allowed;
 }
 
 .field-meta {
@@ -296,24 +264,23 @@ input {
   justify-content: space-between;
   align-items: flex-start;
   gap: 8px;
-  margin-top: 6px;
+  margin-top: 4px;
   min-height: 1.5em;
   font-size: 0.85rem;
 }
 
 .field-error {
-  margin-top: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
   color: var(--color-danger);
+  font-weight: 600;
 }
 
-.field-meta .field-error {
-  margin-top: 0;
+.field-error::before {
+  content: '⚠ ';
+  content: '⚠ ' / '';
 }
 
 .counter {
-  color: var(--color-faint);
+  color: var(--color-muted);
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
@@ -326,25 +293,11 @@ input {
 .habit-form {
   display: flex;
   flex-direction: column;
-  padding: 16px;
-  border-radius: var(--radius);
-  background: var(--color-surface);
-  box-shadow: 0 0 0 1px var(--color-line);
-}
-
-.habit-form .field-meta {
-  margin-bottom: 12px;
+  gap: 4px;
 }
 
 .habit-form .button-row {
-  margin-top: 16px;
-}
-
-.detail .habit-form {
-  padding: 16px 0 0;
-  box-shadow: none;
-  border-top: 1px solid var(--color-line);
-  border-radius: 0;
+  margin-top: 4px;
 }
 
 /* 습관 목록 */
@@ -354,20 +307,22 @@ input {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .habit-item {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 8px;
-  padding: 6px 6px 6px 4px;
-  border-radius: var(--radius);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  padding: 4px;
 }
 
 .habit-item--selected {
-  background: var(--color-surface);
-  box-shadow: 0 0 0 1px var(--color-line);
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary-soft);
+  padding: 3px;
 }
 
 .habit-item__select {
@@ -379,16 +334,12 @@ input {
   justify-content: center;
   gap: 2px;
   min-height: 44px;
-  padding: 4px 10px;
+  padding: 6px 8px;
   border: 0;
-  border-left: 3px solid transparent;
+  border-radius: 6px;
   background: transparent;
   text-align: left;
   cursor: pointer;
-}
-
-.habit-item--selected .habit-item__select {
-  border-left-color: var(--color-ink);
 }
 
 .habit-item__name {
@@ -401,32 +352,31 @@ input {
   font-weight: 800;
 }
 
+.habit-item--selected .habit-item__name::before {
+  content: '▸ ';
+  content: '▸ ' / '';
+  color: var(--color-primary);
+}
+
 .habit-item__streak {
   font-size: 0.85rem;
   color: var(--color-muted);
-  font-variant-numeric: tabular-nums;
 }
 
 .today-toggle {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-width: 92px;
-  min-height: 40px;
-  padding: 0 12px 0 8px;
-  border: 1px solid var(--color-line-strong);
-  border-radius: var(--radius-small);
+  gap: 6px;
+  min-width: 88px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
   background: var(--color-surface);
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-muted);
   cursor: pointer;
-}
-
-.today-toggle:hover:not(:disabled) {
-  border-color: var(--color-ink);
-  color: var(--color-ink);
 }
 
 .today-toggle__icon {
@@ -435,28 +385,27 @@ input {
   justify-content: center;
   width: 22px;
   height: 22px;
-  border: 1.5px solid currentColor;
-  border-radius: 5px;
+  border: 2px solid var(--color-muted);
+  border-radius: 50%;
   font-size: 0.8rem;
   font-weight: 800;
 }
 
-.today-toggle--done,
-.today-toggle--done:hover:not(:disabled) {
-  border-color: var(--color-ink);
-  background: var(--color-ink);
-  color: var(--color-surface);
+.today-toggle--done {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
 }
 
 .today-toggle--done .today-toggle__icon {
-  border-color: var(--color-surface);
-  background: var(--color-surface);
-  color: var(--color-ink);
+  border-color: #fff;
+  background: #fff;
+  color: var(--color-primary);
 }
 
 .today-toggle:disabled {
   cursor: not-allowed;
-  opacity: 0.45;
+  opacity: 0.5;
 }
 
 /* 상세 */
@@ -464,51 +413,47 @@ input {
 .detail {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .detail__header {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .detail__title {
-  font-size: 1.6rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  line-height: 1.25;
+  font-size: 1.4rem;
   overflow-wrap: anywhere;
 }
 
 .streak {
   display: flex;
   align-items: baseline;
-  gap: 12px;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: var(--radius-small);
+  background: var(--color-primary-soft);
 }
 
 .streak__label {
   font-weight: 600;
-  color: var(--color-muted);
+  color: var(--color-primary-strong);
 }
 
 .streak__value {
-  font-size: 3rem;
+  font-size: 1.75rem;
   font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1;
-  color: var(--color-ink);
+  color: var(--color-primary-strong);
   font-variant-numeric: tabular-nums;
 }
 
-/* 달력: 선을 공유하는 모눈 한 장 */
+/* 달력 */
 
 .calendar {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-top: 20px;
-  border-top: 1px solid var(--color-line);
+  gap: 8px;
 }
 
 .calendar__header {
@@ -519,27 +464,25 @@ input {
 }
 
 .calendar__title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  font-size: 1.1rem;
 }
 
 .calendar__rate {
   text-align: center;
   font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-ink-strong);
+  color: var(--color-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .calendar__grid {
   width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 3px;
 }
 
 .calendar__grid th {
-  padding: 0 0 8px;
+  padding: 4px 0;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-muted);
@@ -547,37 +490,27 @@ input {
 
 .calendar__grid td {
   padding: 0;
-  border: 1px solid var(--color-line);
-}
-
-.calendar__grid td.calendar__empty {
-  border-color: transparent;
 }
 
 .day {
   position: relative;
   width: 100%;
-  min-height: 56px;
+  min-height: 52px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   gap: 1px;
-  padding: 6px 0 4px;
-  border: 0;
-  border-radius: 0;
+  padding: 4px 0;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
   background: var(--color-surface);
   cursor: pointer;
   line-height: 1.2;
 }
 
 .day:hover:not(:disabled) {
-  background: var(--color-ink-soft);
-}
-
-.day:focus-visible {
-  outline-offset: -2px;
-  z-index: 1;
+  border-color: var(--color-primary);
 }
 
 .day__number {
@@ -588,7 +521,7 @@ input {
 
 .day__mark {
   min-height: 1em;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 800;
 }
 
@@ -597,50 +530,47 @@ input {
   font-weight: 700;
 }
 
-.day--done,
-.day--done:hover:not(:disabled) {
-  background: var(--color-ink);
-  color: var(--color-surface);
-}
-
-.day--done:hover:not(:disabled) {
-  background: var(--color-ink-strong);
+.day--done {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
 }
 
 .day--today {
-  box-shadow: inset 0 0 0 3px var(--color-text);
-}
-
-.day--done.day--today {
-  box-shadow:
-    inset 0 0 0 3px var(--color-text),
-    inset 0 0 0 5px var(--color-surface);
+  border: 3px solid var(--color-text);
+  padding: 2px 0;
 }
 
 .day--start::after {
   content: '';
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 4px;
+  right: 4px;
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--color-ink);
+  background: var(--color-primary);
 }
 
 .day--done.day--start::after {
-  background: var(--color-surface);
+  background: #fff;
 }
 
 .day--locked {
   cursor: not-allowed;
-  color: var(--color-faint);
-  background: var(--color-locked);
+  color: #9a9a94;
+  border-style: dashed;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-locked),
+    var(--color-locked) 4px,
+    var(--color-surface) 4px,
+    var(--color-surface) 8px
+  );
 }
 
 .day--locked.day--done {
-  color: var(--color-ink);
-  background: var(--color-ink-soft);
+  color: var(--color-primary);
 }
 
 .day:disabled:not(.day--locked) {
@@ -660,14 +590,11 @@ input {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 16px;
-  padding: 8px 0;
+  gap: 12px;
 }
 
 .empty-state__title {
-  font-size: 1.4rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-size: 1.2rem;
 }
 
 .empty-state__features {
@@ -675,71 +602,45 @@ input {
   color: var(--color-muted);
   display: flex;
   flex-direction: column;
-  gap: 6px;
-}
-
-.empty-state__features li::marker {
-  color: var(--color-ink);
+  gap: 4px;
 }
 
 /* 확인창 */
 
 .dialog {
   width: min(420px, calc(100vw - 32px));
-  padding: 24px;
-  border: 0;
-  border-radius: var(--radius-sheet);
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   background: var(--color-surface);
   color: var(--color-text);
-  box-shadow: 0 24px 48px -16px rgb(28 32 51 / 0.4);
 }
 
 .dialog::backdrop {
-  background: rgb(28 32 51 / 0.45);
+  background: rgb(0 0 0 / 0.4);
 }
 
 .dialog__title {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   overflow-wrap: anywhere;
   margin-bottom: 8px;
 }
 
 .dialog__description {
   color: var(--color-muted);
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
-@media (max-width: 480px) {
-  .app {
-    padding-top: 20px;
+@media (max-width: 380px) {
+  .panel {
+    padding: 12px;
   }
 
-  .panel--detail {
-    margin: 0 -8px;
-    padding: 20px 14px;
-  }
-
-  .streak__value {
-    font-size: 2.5rem;
-  }
-
-  .day {
-    min-height: 50px;
+  .calendar__grid {
+    border-spacing: 2px;
   }
 
   .day__number {
     font-size: 0.8rem;
-  }
-
-  .day--start::after {
-    top: 4px;
-    right: 4px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  * {
-    transition: none !important;
-    animation: none !important;
   }
 }
