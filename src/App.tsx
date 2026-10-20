@@ -1,8 +1,8 @@
-import { useRef, useState } from 'react'
-import { AddHabitForm } from './components/AddHabitForm'
+import { useState } from 'react'
 import { EmptyState } from './components/EmptyState'
 import { ErrorBanner } from './components/ErrorBanner'
 import { HabitDetail } from './components/HabitDetail'
+import { HabitForm } from './components/HabitForm'
 import { HabitList } from './components/HabitList'
 import { StorageNotice } from './components/StorageNotice'
 import { useHabitStore } from './hooks/useHabitStore'
@@ -11,18 +11,25 @@ import { formatFullDate } from './lib/date'
 
 export default function App() {
   const today = useToday()
-  const { state, reload, addHabit, renameHabit, deleteHabit, toggleDate } = useHabitStore()
+  const { state, reload, addHabit, editHabit, deleteHabit, toggleDate } = useHabitStore()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const addInputRef = useRef<HTMLInputElement>(null)
+  const [adding, setAdding] = useState(false)
 
   const data = state.data
   const habits = data?.habits ?? []
   const canEdit = state.status === 'ready'
   // 선택은 저장하지 않는다. 선택한 습관이 없거나 사라졌으면 등록순 첫 습관을 보여준다.
   const selected = habits.find((habit) => habit.id === selectedId) ?? habits[0] ?? null
+  const [prevCanEdit, setPrevCanEdit] = useState(canEdit)
 
-  const handleAdd = (name: string) => {
-    const result = addHabit(name)
+  // 저장 오류로 편집이 막히면 열려 있던 등록 폼을 닫는다.
+  if (canEdit !== prevCanEdit) {
+    setPrevCanEdit(canEdit)
+    if (!canEdit) setAdding(false)
+  }
+
+  const handleAdd = (name: string, startDate: string) => {
+    const result = addHabit(name, startDate)
     if (result.ok) setSelectedId(result.id)
     return result
   }
@@ -50,8 +57,30 @@ export default function App() {
       {data && (
         <main className="layout">
           <section className="panel panel--list">
-            <h2 className="panel__title">습관 목록</h2>
-            <AddHabitForm disabled={!canEdit} onAdd={handleAdd} inputRef={addInputRef} />
+            <div className="panel__header">
+              <h2 className="panel__title">습관 목록</h2>
+              {!adding && (
+                <button
+                  type="button"
+                  className="button button--primary"
+                  onClick={() => setAdding(true)}
+                  disabled={!canEdit}
+                >
+                  습관 등록
+                </button>
+              )}
+            </div>
+            {adding && (
+              <HabitForm
+                initialName=""
+                initialStartDate={today}
+                today={today}
+                submitLabel="등록"
+                placeholder="예: 물 2잔 마시기"
+                onSubmit={handleAdd}
+                onClose={() => setAdding(false)}
+              />
+            )}
             {habits.length > 0 && (
               <HabitList
                 habits={habits}
@@ -71,12 +100,12 @@ export default function App() {
                 habit={selected}
                 today={today}
                 canEdit={canEdit}
-                onRename={renameHabit}
+                onEdit={editHabit}
                 onDelete={handleDelete}
                 onToggle={toggleDate}
               />
             ) : (
-              <EmptyState disabled={!canEdit} onStart={() => addInputRef.current?.focus()} />
+              <EmptyState disabled={!canEdit} onStart={() => setAdding(true)} />
             )}
           </div>
         </main>

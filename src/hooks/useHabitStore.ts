@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { todayKey } from '../lib/date'
 import { validateHabitName, type NameValidation } from '../lib/habitName'
+import { isCheckableDate, validateStartDate, type StartDateValidation } from '../lib/startDate'
 import {
   STORAGE_KEY,
   createId,
@@ -23,8 +24,18 @@ function stateFromLoad(): StoreState {
     : { status: 'error', reason: result.reason, data: null }
 }
 
-export type AddResult = { ok: true; id: string } | { ok: false; message?: string }
-export type RenameResult = { ok: true } | { ok: false; message?: string }
+/** 칸별 오류 메시지. 저장 실패처럼 칸과 무관한 실패면 둘 다 비어 있다. */
+type FieldErrors = { nameError?: string; startDateError?: string }
+export type AddResult = { ok: true; id: string } | ({ ok: false } & FieldErrors)
+export type EditResult = { ok: true } | ({ ok: false } & FieldErrors)
+
+/** 두 칸의 오류를 함께 보여줄 수 있도록 각 검사 결과에서 오류 메시지를 모은다. */
+function fieldErrors(name: NameValidation, startDate: StartDateValidation): FieldErrors {
+  return {
+    nameError: name.ok ? undefined : name.message,
+    startDateError: startDate.ok ? undefined : startDate.message,
+  }
+}
 
 export function useHabitStore() {
   const [state, setState] = useState<StoreState>(stateFromLoad)
@@ -64,17 +75,18 @@ export function useHabitStore() {
   }, [reload])
 
   const addHabit = useCallback(
-    (rawName: string): AddResult => {
+    (rawName: string, rawStartDate: string): AddResult => {
       const current = stateRef.current
       if (current.status !== 'ready') return { ok: false }
-      const validation: NameValidation = validateHabitName(rawName, current.data.habits)
-      if (!validation.ok) return { ok: false, message: validation.message }
+      const nameResult = validateHabitName(rawName, current.data.habits)
+      const startResult = validateStartDate(rawStartDate, todayKey())
+      if (!nameResult.ok || !startResult.ok) return { ok: false, ...fieldErrors(nameResult, startResult) }
       const id = createId(current.data.habits)
       const saved = commit((data) => ({
         ...data,
         habits: [
           ...data.habits,
-          { id, name: validation.name, createdDate: todayKey(), completedDates: [] },
+          { id, name: nameResult.name, createdDate: startResult.date, completedDates: [] },
         ],
       }))
       return saved ? { ok: true, id } : { ok: false }
@@ -82,19 +94,25 @@ export function useHabitStore() {
     [commit],
   )
 
-  const renameHabit = useCallback(
-    (id: string, rawName: string): RenameResult => {
+  /** 이름과 시작일을 한 번에 검사해 함께 저장한다. 하나라도 틀리면 아무것도 저장하지 않는다. */
+  const editHabit = useCallback(
+    (id: string, rawName: string, rawStartDate: string): EditResult => {
       const current = stateRef.current
       if (current.status !== 'ready') return { ok: false }
-      const validation = validateHabitName(rawName, current.data.habits, id)
-      if (!validation.ok) return { ok: false, message: validation.message }
       const target = current.data.habits.find((habit) => habit.id === id)
       if (!target) return { ok: false }
-      if (target.name === validation.name) return { ok: true }
+      const nameResult = validateHabitName(rawName, current.data.habits, id)
+      // 시작일을 바꾸지 않았으면 다시 검사하지 않는다. 기기 날짜를 되돌려 시작일이 오늘보다 늦어져도 이름은 바꿀 수 있게 한다.
+      const startResult: StartDateValidation =
+        rawStartDate === target.createdDate
+          ? { ok: true, date: target.createdDate }
+          : validateStartDate(rawStartDate, todayKey(), target.completedDates[0])
+      if (!nameResult.ok || !startResult.ok) return { ok: false, ...fieldErrors(nameResult, startResult) }
+      if (target.name === nameResult.name && target.createdDate === startResult.date) return { ok: true }
       const saved = commit((data) => ({
         ...data,
         habits: data.habits.map((habit) =>
-          habit.id === id ? { ...habit, name: validation.name } : habit,
+          habit.id === id ? { ...habit, name: nameResult.name, createdDate: startResult.date } : habit,
         ),
       }))
       return saved ? { ok: true } : { ok: false }
@@ -116,7 +134,7 @@ export function useHabitStore() {
     (id: string, date: string): boolean =>
       commit((data) => {
         const target = data.habits.find((habit) => habit.id === id)
-        if (!target || date > todayKey()) return null
+        if (!target || !isCheckableDate(date, target.createdDate, todayKey())) return null
         const completed = new Set(target.completedDates)
         if (completed.has(date)) completed.delete(date)
         else completed.add(date)
@@ -129,5 +147,5 @@ export function useHabitStore() {
     [commit],
   )
 
-  return { state, reload, addHabit, renameHabit, deleteHabit, toggleDate }
+  return { state, reload, addHabit, editHabit, deleteHabit, toggleDate }
 }

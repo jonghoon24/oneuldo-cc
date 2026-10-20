@@ -22,7 +22,7 @@ npm run test:e2e   # Playwright E2E 테스트 (예: npx playwright test -g "새�
 ```
 
 - 변경 후 검증은 `npm run typecheck`와 `npm run lint`가 기본이고, 동작이 바뀌는 변경이면 `npm run test:e2e`도 돌린다. 단위 테스트 러너는 없다. ESLint 설정은 `eslint.config.js`(flat config)에 있고 `@eslint/js`·`typescript-eslint`·`react-hooks`·`react-refresh` 권장 규칙을 쓴다. `tsconfig.json`의 `noUnusedLocals`/`noUnusedParameters` 때문에 쓰지 않는 변수나 매개변수가 있으면 빌드가 실패한다.
-- E2E 테스트는 `e2e/`에 있고 Chromium만 쓴다. `playwright.config.ts`가 개발 서버를 5199 포트로 띄우며(이미 떠 있으면 재사용), 시간대를 `Asia/Seoul`로 고정한다. 각 테스트는 `page.clock.setFixedTime`으로 오늘을 2026-03-18(수) 정오로 고정해 어제·그제가 같은 달에 오게 한다. 날짜 칸은 `.day[data-date="2026-03-18"]`로, 오늘 토글은 습관 이름이 든 `.habit-item` 안의 `.today-toggle`로 찾고, 완료 여부는 `--done` 클래스로 확인한다. 처음 실행하는 환경에서는 `npx playwright install chromium`이 필요하다.
+- E2E 테스트는 `e2e/`에 있고 Chromium만 쓴다. `playwright.config.ts`가 개발 서버를 5199 포트로 띄우며(이미 떠 있으면 재사용), 시간대를 `Asia/Seoul`로 고정한다. 각 테스트는 `page.clock.setFixedTime`으로 오늘을 2026-03-18(수) 정오로 고정해 어제·그제가 같은 달에 오게 한다. 등록한 습관의 어제·그제를 체크하려면 `addHabit(page, name, '2026-03-01')`처럼 시작일을 넘긴다. 날짜 칸은 `.day[data-date="2026-03-18"]`로, 등록 폼은 `.panel--list .habit-form`, 수정 폼은 `.detail .habit-form`으로, 오늘 토글은 습관 이름이 든 `.habit-item` 안의 `.today-toggle`로 찾고, 완료 여부는 `--done` 클래스로 확인한다. 처음 실행하는 환경에서는 `npx playwright install chromium`이 필요하다.
 - `npm run typecheck`는 `src`만 검사한다(`tsconfig.json`의 `include`). `e2e/`와 `playwright.config.ts`는 타입 검사 대상이 아니고, `@types/node`가 없으므로 이 파일들에서 `process` 같은 Node 전역을 쓰지 않는다.
 - 개발 서버에서 `?mock`을 붙여 접속하면 저장소가 비어 있을 때 목 습관 4개를 채운다(`src/dev/mockData.ts`). 이미 데이터가 있으면 덮어쓰지 않으므로, 다시 채우려면 먼저 `localStorage`의 `oneuldo` 키를 지운다.
 
@@ -32,6 +32,7 @@ npm run test:e2e   # Playwright E2E 테스트 (예: npx playwright test -g "새�
 
 ### 저장소 (`src/lib/storage.ts`)
 - 키 `oneuldo`에 `{ version: 1, habits: Habit[] }`를 JSON으로 저장한다. `habits` 배열 순서가 등록 순서다.
+- `Habit.createdDate`는 이름과 달리 **시작일**이다(저장 형식 호환을 위해 필드 이름 유지). 불러올 때 시작일보다 이른 체크 기록이 있으면 메모리에서 시작일을 가장 이른 기록으로 당기고, 이 보정만을 위해 저장하지는 않는다(다음 `commit` 때 함께 저장된다).
 - 불러올 때 엄격하게 검증한다. 습관 하나라도 형식이 틀리거나 id·이름이 중복되면 전체 로드가 `parse` 오류가 된다. 자동 복구하지 않고 읽기 전용으로 막아 기존 데이터를 보호하는 것이 의도다.
 - 데이터 구조를 바꾸면 `DATA_VERSION`과 `parseData`를 함께 손봐야 한다. 지금은 버전이 다르면 그대로 `parse` 오류가 된다.
 
@@ -48,12 +49,14 @@ npm run test:e2e   # Playwright E2E 테스트 (예: npx playwright test -g "새�
 - 달력은 월요일 시작이다.
 
 ### 도메인 규칙
-- 체크 가능한 날짜는 `date ≤ 오늘`이다. 등록일(`createdDate`) 이전 날짜도 체크할 수 있고 연속 일수에도 포함된다. 이 조건은 `toggleDate`와 `Calendar` UI 양쪽에서 막는다. 달력은 `1900-01`까지 거슬러 갈 수 있다.
+- 체크 가능한 날짜는 `시작일(createdDate) ≤ date ≤ 오늘`이다. 이 조건은 `isCheckableDate`(`lib/startDate.ts`) 하나로 표현하고 `toggleDate`와 `Calendar`·`HabitList` UI 양쪽에서 막는다. 달력은 시작일이 든 달까지만 거슬러 갈 수 있다.
+- 시작일(`lib/startDate.ts`): `1900-01-01` 이상, 오늘 이하, 가장 이른 체크 기록 이하. 습관 목록의 '습관 등록'으로 여는 등록 폼(초기값 오늘)에서 정하거나 상세의 '수정'에서 이름과 함께 바꾼다(`editHabit`, 둘 중 하나라도 틀리면 아무것도 저장하지 않는다). 두 폼은 `components/HabitForm.tsx` 하나를 제출 버튼 이름만 바꿔 쓴다.
 - 현재 연속 일수(`lib/streak.ts`): 오늘이 체크되어 있으면 오늘부터, 아니면 어제부터 과거로 끊기지 않은 날을 센다.
-- 월간 달성률(`lib/monthlyRate.ts`): 달력에서 보고 있는 달 기준으로 `체크한 날 수 ÷ 체크할 수 있었던 날 수`를 반올림한 정수 퍼센트로 표시한다. 분모는 그 달 1일부터 말일과 오늘 중 이른 날까지(오늘은 체크 여부와 관계없이 포함)이고, 등록일과 관계없이 항상 1일부터 센다. 달력이 미래 달로 갈 수 없다는 전제로 이번 달이 아니면 그 달 전체 일수를 쓴다.
+- 월간 달성률(`lib/monthlyRate.ts`): 달력에서 보고 있는 달 기준으로 `체크한 날 수 ÷ 체크할 수 있었던 날 수`를 반올림한 정수 퍼센트로 표시한다. 분모는 그 달 1일(시작일이 든 달이면 시작일)부터 말일과 오늘 중 이른 날까지(오늘은 체크 여부와 관계없이 포함)다. 기기 날짜를 되돌려 시작일이 오늘보다 늦으면 0/0이고 모든 날짜가 막힌다.
 - 습관 이름(`lib/habitName.ts`): trim 후 NFC 정규화, 줄바꿈 불가, 코드 포인트 기준 20자 이하, 정규화한 이름끼리 중복 불가. 저장소 로드 검증도 같은 함수를 쓴다.
 
 ### UI
 - 선택한 습관은 저장하지 않는다. 선택이 없거나 사라지면 첫 습관을 보여준다. 삭제하면 다음(없으면 이전) 습관을 선택한다.
+- 등록 폼과 수정 폼은 열린 상태를 각각 `App`과 `HabitDetail`이 들고, `canEdit`이 false가 되면 닫는다.
 - 스크린 리더 대응(`aria-*`, `role`, 숨김 텍스트)과 키보드 전용 조작·포커스 관리는 스펙 범위 밖이라 넣지 않는다. 버튼·`label`·`dialog` 같은 기본 HTML 요소는 그대로 쓴다.
 - 스타일은 `src/styles.css` 한 파일에 있다. `:root`의 CSS 변수와 BEM 형태의 클래스명(`calendar__title`, `day--done`)을 쓴다.

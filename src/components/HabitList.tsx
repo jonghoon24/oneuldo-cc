@@ -1,3 +1,4 @@
+import { isCheckableDate } from '../lib/startDate'
 import { currentStreak } from '../lib/streak'
 import type { Habit } from '../lib/storage'
 
@@ -31,7 +32,7 @@ export function HabitList({ habits, selectedId, today, canEdit, onSelect, onTogg
             <button
               type="button"
               className={doneToday ? 'today-toggle today-toggle--done' : 'today-toggle'}
-              disabled={!canEdit}
+              disabled={!canEdit || !isCheckableDate(today, habit.createdDate, today)}
               onClick={() => onToggleToday(habit.id)}
             >
               <span className="today-toggle__icon">{doneToday ? '✓' : ''}</span>

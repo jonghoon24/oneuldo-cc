@@ -9,11 +9,8 @@ import {
   monthOf,
 } from '../lib/date'
 import { monthlyRate } from '../lib/monthlyRate'
+import { isCheckableDate } from '../lib/startDate'
 import type { Habit } from '../lib/storage'
-
-// 등록일 이전도 체크할 수 있으므로 과거 방향으로는 사실상 제한하지 않는다.
-// YYYY 네 자리 형식이 깨지지 않도록 하한만 둔다.
-const MIN_MONTH = '1900-01'
 
 type Props = {
   habit: Habit
@@ -32,20 +29,25 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
   // null이면 현재 달을 따라간다. 자정이 지나 달이 바뀌어도 현재 달을 보던 화면은 새 달로 넘어간다.
   const [viewMonth, setViewMonth] = useState<string | null>(null)
 
+  const startDate = habit.createdDate
   const currentMonth = monthOf(today)
-  const shownMonth = clampMonth(viewMonth ?? currentMonth, MIN_MONTH, currentMonth)
-  const canGoPrev = shownMonth > MIN_MONTH
+  // 시작일이 든 달까지만 거슬러 갈 수 있다. 시작일이 오늘보다 늦으면(기기 날짜를 되돌린 경우) 현재 달까지다.
+  const minMonth = monthOf(startDate < today ? startDate : today)
+  const shownMonth = clampMonth(viewMonth ?? currentMonth, minMonth, currentMonth)
+  const canGoPrev = shownMonth > minMonth
   const canGoNext = shownMonth < currentMonth
 
   const move = (delta: number) => {
-    const next = clampMonth(addMonths(shownMonth, delta), MIN_MONTH, currentMonth)
+    const next = clampMonth(addMonths(shownMonth, delta), minMonth, currentMonth)
     setViewMonth(next === currentMonth ? null : next)
   }
 
   const completed = new Set(habit.completedDates)
   const weeks = chunkWeeks(getMonthCells(shownMonth))
-  const hasRecordInMonth = habit.completedDates.some((date) => monthOf(date) === shownMonth)
-  const rate = monthlyRate(habit.completedDates, shownMonth, today)
+  // 전체 기록은 한 번만 훑고, 기록 유무와 달성률은 이 달 날짜만으로 계산한다.
+  const monthDates = habit.completedDates.filter((date) => monthOf(date) === shownMonth)
+  const hasRecordInMonth = monthDates.length > 0
+  const rate = monthlyRate(monthDates, shownMonth, today, startDate)
 
   return (
     <section className="calendar">
@@ -70,6 +72,7 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
           ›
         </button>
       </div>
+
       <p className="calendar__rate">
         달성률 {rate.percent}% ({rate.done}/{rate.total}일)
       </p>
@@ -89,18 +92,19 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
                 if (!date) return <td key={`empty-${dayIndex}`} className="calendar__empty" />
                 const done = completed.has(date)
                 const isToday = date === today
-                const future = date > today
+                const locked = !isCheckableDate(date, startDate, today)
                 const classNames = ['day']
                 if (done) classNames.push('day--done')
                 if (isToday) classNames.push('day--today')
-                if (future) classNames.push('day--locked')
+                if (date === startDate) classNames.push('day--start')
+                if (locked) classNames.push('day--locked')
                 return (
                   <td key={date}>
                     <button
                       type="button"
                       className={classNames.join(' ')}
                       data-date={date}
-                      disabled={future || !canEdit}
+                      disabled={locked || !canEdit}
                       onClick={() => onToggle(date)}
                     >
                       <span className="day__number">{dayOfMonth(date)}</span>
@@ -115,7 +119,7 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
         </tbody>
       </table>
 
-      <p className="calendar__legend">✓ 완료 · 빈 칸 미완료 · 굵은 테두리 오늘 · 흐린 날짜 선택 불가</p>
+      <p className="calendar__legend">✓ 완료 · 빈 칸 미완료 · 굵은 테두리 오늘 · 점 표시 시작일 · 흐린 날짜 선택 불가</p>
       {!hasRecordInMonth && <p className="calendar__empty-note">이 달에는 아직 기록이 없어요.</p>}
     </section>
   )

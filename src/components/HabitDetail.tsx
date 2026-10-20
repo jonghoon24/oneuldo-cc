@@ -1,22 +1,22 @@
 import { useState } from 'react'
-import type { RenameResult } from '../hooks/useHabitStore'
+import type { EditResult } from '../hooks/useHabitStore'
 import { currentStreak } from '../lib/streak'
 import type { Habit } from '../lib/storage'
 import { Calendar } from './Calendar'
 import { ConfirmDialog } from './ConfirmDialog'
-import { RenameForm } from './RenameForm'
+import { HabitForm } from './HabitForm'
 
 type Props = {
   habit: Habit
   today: string
   canEdit: boolean
-  onRename: (id: string, name: string) => RenameResult
+  onEdit: (id: string, name: string, startDate: string) => EditResult
   onDelete: (id: string) => void
   onToggle: (id: string, date: string) => void
 }
 
-export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggle }: Props) {
-  const [renaming, setRenaming] = useState(false)
+export function HabitDetail({ habit, today, canEdit, onEdit, onDelete, onToggle }: Props) {
+  const [editing, setEditing] = useState(false)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [prevCanEdit, setPrevCanEdit] = useState(canEdit)
 
@@ -26,7 +26,7 @@ export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggl
   if (canEdit !== prevCanEdit) {
     setPrevCanEdit(canEdit)
     if (!canEdit) {
-      setRenaming(false)
+      setEditing(false)
       setConfirmingDelete(false)
     }
   }
@@ -35,21 +35,24 @@ export function HabitDetail({ habit, today, canEdit, onRename, onDelete, onToggl
     <article className="detail">
       <header className="detail__header">
         <h2 className="detail__title">{habit.name}</h2>
-        {renaming ? (
-          <RenameForm
+        {editing ? (
+          <HabitForm
             initialName={habit.name}
-            onSubmit={(name) => onRename(habit.id, name)}
-            onClose={() => setRenaming(false)}
+            initialStartDate={habit.createdDate}
+            today={today}
+            submitLabel="저장"
+            onSubmit={(name, startDate) => onEdit(habit.id, name, startDate)}
+            onClose={() => setEditing(false)}
           />
         ) : (
           <div className="button-row">
             <button
               type="button"
               className="button"
-              onClick={() => setRenaming(true)}
+              onClick={() => setEditing(true)}
               disabled={!canEdit}
             >
-              이름 변경
+              수정
             </button>
             <button
               type="button"
