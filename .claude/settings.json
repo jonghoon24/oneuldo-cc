@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/stop-check.sh",
+            "timeout": 180,
+            "statusMessage": "typecheck와 lint 확인 중..."
+          }
+        ]
+      }
+    ]
+  }
+}
