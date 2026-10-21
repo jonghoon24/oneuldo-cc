@@ -8,6 +8,7 @@ import { StorageNotice } from './components/StorageNotice'
 import { useHabitStore } from './hooks/useHabitStore'
 import { useToday } from './hooks/useToday'
 import { formatMonthDay } from './lib/date'
+import { suggestColor, type HabitColor } from './lib/habitColor'
 import { isCheckableDate } from './lib/startDate'
 
 export default function App() {
@@ -34,8 +35,8 @@ export default function App() {
   const doneTodayCount = todayHabits.filter((habit) => habit.completedDates.includes(today)).length
   const allDoneToday = todayHabits.length > 0 && doneTodayCount === todayHabits.length
 
-  const handleAdd = (name: string, startDate: string) => {
-    const result = addHabit(name, startDate)
+  const handleAdd = (name: string, startDate: string, color: HabitColor) => {
+    const result = addHabit(name, startDate, color)
     if (result.ok) setSelectedId(result.id)
     return result
   }
@@ -82,6 +83,7 @@ export default function App() {
               <HabitForm
                 initialName=""
                 initialStartDate={today}
+                initialColor={suggestColor(habits)}
                 today={today}
                 submitLabel="등록"
                 placeholder="예: 물 2잔 마시기"

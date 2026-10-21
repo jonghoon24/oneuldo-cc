@@ -19,6 +19,7 @@ export function createMockData(today: string = todayKey()): StoredData {
       name: '물 2잔 마시기',
       createdDate: addDays(today, -45),
       completedDates: daysAgo(today, [...range(0, 11), 13, 14, 15, 18, 20, 21, 22, 25, 30, 31, 33, 40, 44]),
+      color: 'yellow',
     },
     {
       // 오늘은 아직, 어제까지 5일 연속
@@ -26,6 +27,7 @@ export function createMockData(today: string = todayKey()): StoredData {
       name: '30분 걷기',
       createdDate: addDays(today, -20),
       completedDates: daysAgo(today, [...range(1, 5), 8, 9, 12, 15, 16, 19]),
+      color: 'pink',
     },
     {
       // 어제 기록이 없어 0일
@@ -33,6 +35,7 @@ export function createMockData(today: string = todayKey()): StoredData {
       name: '독서 10쪽',
       createdDate: addDays(today, -10),
       completedDates: daysAgo(today, [2, 3, 4, 7, 9]),
+      color: 'green',
     },
     {
       // 오늘 등록, 기록 없음
@@ -40,6 +43,7 @@ export function createMockData(today: string = todayKey()): StoredData {
       name: '명상 5분',
       createdDate: today,
       completedDates: [],
+      color: 'sky',
     },
   ]
   return { version: DATA_VERSION, habits }

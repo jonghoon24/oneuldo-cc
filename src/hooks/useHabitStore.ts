@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { todayKey } from '../lib/date'
+import { isHabitColor, type HabitColor } from '../lib/habitColor'
 import { validateHabitName, type NameValidation } from '../lib/habitName'
 import { isCheckableDate, validateStartDate, type StartDateValidation } from '../lib/startDate'
 import {
@@ -75,9 +76,9 @@ export function useHabitStore() {
   }, [reload])
 
   const addHabit = useCallback(
-    (rawName: string, rawStartDate: string): AddResult => {
+    (rawName: string, rawStartDate: string, color: HabitColor): AddResult => {
       const current = stateRef.current
-      if (current.status !== 'ready') return { ok: false }
+      if (current.status !== 'ready' || !isHabitColor(color)) return { ok: false }
       const nameResult = validateHabitName(rawName, current.data.habits)
       const startResult = validateStartDate(rawStartDate, todayKey())
       if (!nameResult.ok || !startResult.ok) return { ok: false, ...fieldErrors(nameResult, startResult) }
@@ -86,7 +87,7 @@ export function useHabitStore() {
         ...data,
         habits: [
           ...data.habits,
-          { id, name: nameResult.name, createdDate: startResult.date, completedDates: [] },
+          { id, name: nameResult.name, createdDate: startResult.date, completedDates: [], color },
         ],
       }))
       return saved ? { ok: true, id } : { ok: false }
@@ -94,11 +95,11 @@ export function useHabitStore() {
     [commit],
   )
 
-  /** 이름과 시작일을 한 번에 검사해 함께 저장한다. 하나라도 틀리면 아무것도 저장하지 않는다. */
+  /** 이름·시작일·색을 한 번에 검사해 함께 저장한다. 이름이나 시작일이 틀리면 아무것도 저장하지 않는다. */
   const editHabit = useCallback(
-    (id: string, rawName: string, rawStartDate: string): EditResult => {
+    (id: string, rawName: string, rawStartDate: string, color: HabitColor): EditResult => {
       const current = stateRef.current
-      if (current.status !== 'ready') return { ok: false }
+      if (current.status !== 'ready' || !isHabitColor(color)) return { ok: false }
       const target = current.data.habits.find((habit) => habit.id === id)
       if (!target) return { ok: false }
       const nameResult = validateHabitName(rawName, current.data.habits, id)
@@ -108,11 +109,17 @@ export function useHabitStore() {
           ? { ok: true, date: target.createdDate }
           : validateStartDate(rawStartDate, todayKey(), target.completedDates[0])
       if (!nameResult.ok || !startResult.ok) return { ok: false, ...fieldErrors(nameResult, startResult) }
-      if (target.name === nameResult.name && target.createdDate === startResult.date) return { ok: true }
+      if (
+        target.name === nameResult.name &&
+        target.createdDate === startResult.date &&
+        target.color === color
+      ) {
+        return { ok: true }
+      }
       const saved = commit((data) => ({
         ...data,
         habits: data.habits.map((habit) =>
-          habit.id === id ? { ...habit, name: nameResult.name, createdDate: startResult.date } : habit,
+          habit.id === id ? { ...habit, name: nameResult.name, createdDate: startResult.date, color } : habit,
         ),
       }))
       return saved ? { ok: true } : { ok: false }

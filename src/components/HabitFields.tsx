@@ -1,5 +1,6 @@
 // 습관 폼의 입력칸. 레이아웃과 제출은 HabitForm이 맡는다.
 import { useId, type ClipboardEvent, type DragEvent, type Ref, type RefObject } from 'react'
+import { HABIT_COLORS, HABIT_COLOR_NAMES, type HabitColor } from '../lib/habitColor'
 import { HABIT_NAME_MAX_LENGTH, NAME_ERROR_LINE_BREAK, hasLineBreak, nameLength } from '../lib/habitName'
 import { MIN_START_DATE } from '../lib/startDate'
 
@@ -94,5 +95,34 @@ export function StartDateField({ value, error, today, onChange }: StartDateField
       />
       {error && <p className="field-error">{error}</p>}
     </>
+  )
+}
+
+type ColorFieldProps = {
+  value: HabitColor
+  onChange: (value: HabitColor) => void
+}
+
+/** '색' 라벨과 팔레트 순서대로 놓인 색 견본 */
+export function ColorField({ value, onChange }: ColorFieldProps) {
+  const name = useId()
+  return (
+    <fieldset className="color-field">
+      <legend className="field-label">색</legend>
+      <div className="color-field__swatches">
+        {HABIT_COLORS.map((color) => (
+          <input
+            key={color}
+            type="radio"
+            name={name}
+            value={color}
+            title={HABIT_COLOR_NAMES[color]}
+            className={`color-swatch pen--${color}`}
+            checked={value === color}
+            onChange={() => onChange(color)}
+          />
+        ))}
+      </div>
+    </fieldset>
   )
 }

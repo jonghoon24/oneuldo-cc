@@ -23,7 +23,7 @@ export function HabitList({ habits, selectedId, today, canEdit, onSelect, onTogg
           <li key={habit.id} className={selected ? 'habit-item habit-item--selected' : 'habit-item'}>
             <button
               type="button"
-              className={doneToday ? 'today-toggle today-toggle--done' : 'today-toggle'}
+              className={`today-toggle pen--${habit.color}${doneToday ? ' today-toggle--done' : ''}`}
               disabled={!canEdit || !isCheckableDate(today, habit.createdDate, today)}
               onClick={() => onToggleToday(habit.id)}
               title={doneToday ? '오늘 체크 해제' : '오늘 했어요'}

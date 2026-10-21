@@ -1,7 +1,8 @@
 /*
  * 형광펜으로 칠하는 스터디 플래너.
  * 체크한 날은 형광펜으로 그은 것처럼 칠하고, 같은 주에 이어서 체크한 날은 한 줄로 이어 연속이 그대로 보이게 한다.
- * 강조는 형광펜 노랑 하나에만 쓰고, 나머지는 잉크색과 회색으로 조용히 둔다.
+ * 완료 표시는 습관마다 고른 형광펜 색(.pen--*)으로 칠하고, 나머지는 잉크색과 회색으로 조용히 둔다.
+ * 습관과 무관한 강조(앱 이름, '오늘도 다 했어요')는 형광펜 노랑으로 긋는다.
  */
 
 :root {
@@ -15,6 +16,25 @@
   --color-highlight: #ffd93d;
   --color-highlight-edge: #e9bb00;
   --color-highlight-soft: #fff2b3;
+  /* 습관 색 팔레트. 본색 / 테두리용 진한 색 / 미리보기용 옅은 색 */
+  --pen-yellow: var(--color-highlight);
+  --pen-yellow-edge: var(--color-highlight-edge);
+  --pen-yellow-soft: var(--color-highlight-soft);
+  --pen-pink: #ffa3cf;
+  --pen-pink-edge: #ec5fa0;
+  --pen-pink-soft: #ffe2f0;
+  --pen-green: #92e6a0;
+  --pen-green-edge: #3dba58;
+  --pen-green-soft: #ddf7e2;
+  --pen-sky: #93d5ff;
+  --pen-sky-edge: #379fe0;
+  --pen-sky-soft: #dff2ff;
+  --pen-orange: #ffbb70;
+  --pen-orange-edge: #ec8a1d;
+  --pen-orange-soft: #ffe8cc;
+  --pen-purple: #c9adff;
+  --pen-purple-edge: #9568ec;
+  --pen-purple-soft: #eee4ff;
   --color-danger: #c62f2f;
   --color-danger-strong: #a32424;
   --color-danger-soft: #fdeeee;
@@ -156,6 +176,44 @@ input {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 12px 16px;
+}
+
+/* 습관 색. 안쪽 요소는 --pen 변수로 그 습관의 형광펜 색을 쓴다. */
+
+.pen--yellow {
+  --pen: var(--pen-yellow);
+  --pen-edge: var(--pen-yellow-edge);
+  --pen-soft: var(--pen-yellow-soft);
+}
+
+.pen--pink {
+  --pen: var(--pen-pink);
+  --pen-edge: var(--pen-pink-edge);
+  --pen-soft: var(--pen-pink-soft);
+}
+
+.pen--green {
+  --pen: var(--pen-green);
+  --pen-edge: var(--pen-green-edge);
+  --pen-soft: var(--pen-green-soft);
+}
+
+.pen--sky {
+  --pen: var(--pen-sky);
+  --pen-edge: var(--pen-sky-edge);
+  --pen-soft: var(--pen-sky-soft);
+}
+
+.pen--orange {
+  --pen: var(--pen-orange);
+  --pen-edge: var(--pen-orange-edge);
+  --pen-soft: var(--pen-orange-soft);
+}
+
+.pen--purple {
+  --pen: var(--pen-purple);
+  --pen-edge: var(--pen-purple-edge);
+  --pen-soft: var(--pen-purple-soft);
 }
 
 /* 버튼과 입력 */
@@ -316,6 +374,55 @@ input {
   background: var(--color-paper);
 }
 
+.color-field {
+  min-width: 0;
+  margin: 8px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.color-field__swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 2px 0;
+}
+
+.color-swatch {
+  appearance: none;
+  position: relative;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  border: 2px solid var(--pen-edge);
+  border-radius: 50%;
+  background: var(--pen);
+  cursor: pointer;
+}
+
+/* 고른 색은 잉크색 고리와 체크 표시로 보여준다. */
+.color-swatch:checked {
+  box-shadow:
+    0 0 0 2px var(--color-paper),
+    0 0 0 4px var(--color-ink);
+}
+
+.color-swatch:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 7px;
+  height: 13px;
+  border: solid var(--color-ink);
+  border-width: 0 3px 3px 0;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.color-swatch:focus-visible {
+  outline-offset: 4px;
+}
+
 .habit-form .field-error {
   font-size: 0.8125rem;
 }
@@ -387,7 +494,8 @@ input {
   width: 52px;
   height: 52px;
   padding: 0;
-  border: 2px solid var(--color-faint);
+  /* 체크 전에도 테두리로 습관 색을 보여준다. */
+  border: 2px solid var(--pen-edge);
   border-radius: 50%;
   background: var(--color-paper);
   cursor: pointer;
@@ -407,8 +515,8 @@ input {
 
 .today-toggle--done,
 .today-toggle--done:hover:not(:disabled) {
-  border-color: var(--color-highlight-edge);
-  background: var(--color-highlight);
+  border-color: var(--pen-edge);
+  background: var(--pen);
 }
 
 .today-toggle__icon {
@@ -636,12 +744,12 @@ input {
 }
 
 .day:hover:not(:disabled)::before {
-  background: var(--color-highlight-soft);
+  background: var(--pen-soft);
 }
 
 .day--done::before,
 .day--done:hover:not(:disabled)::before {
-  background: var(--color-highlight);
+  background: var(--pen);
 }
 
 /* 이웃 칸과 1px 겹쳐 그어 소수점 픽셀에서 생기는 이음매를 없앤다. */

@@ -50,7 +50,7 @@ export function Calendar({ habit, today, canEdit, onToggle }: Props) {
   const rate = monthlyRate(monthDates, shownMonth, today, startDate)
 
   return (
-    <section className="calendar">
+    <section className={`calendar pen--${habit.color}`}>
       <div className="calendar__header">
         <div className="calendar__heading">
           <h3 className="calendar__title">{formatMonth(shownMonth)}</h3>

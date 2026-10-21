@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { EditResult } from '../hooks/useHabitStore'
+import type { HabitColor } from '../lib/habitColor'
 import { isCheckableDate } from '../lib/startDate'
 import { currentStreak } from '../lib/streak'
 import type { Habit } from '../lib/storage'
@@ -11,7 +12,7 @@ type Props = {
   habit: Habit
   today: string
   canEdit: boolean
-  onEdit: (id: string, name: string, startDate: string) => EditResult
+  onEdit: (id: string, name: string, startDate: string, color: HabitColor) => EditResult
   onDelete: (id: string) => void
   onToggle: (id: string, date: string) => void
 }
@@ -70,9 +71,10 @@ export function HabitDetail({ habit, today, canEdit, onEdit, onDelete, onToggle 
           <HabitForm
             initialName={habit.name}
             initialStartDate={habit.createdDate}
+            initialColor={habit.color}
             today={today}
             submitLabel="저장"
-            onSubmit={(name, startDate) => onEdit(habit.id, name, startDate)}
+            onSubmit={(name, startDate, color) => onEdit(habit.id, name, startDate, color)}
             onClose={() => setEditing(false)}
           />
         )}

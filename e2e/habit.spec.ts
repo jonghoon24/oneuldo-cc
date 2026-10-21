@@ -21,11 +21,12 @@ function addButton(page: Page) {
   return page.getByRole('button', { name: '습관 등록', exact: true })
 }
 
-/** '습관 등록' 폼을 열어 등록한다. startDate를 넘기면 그 날을 시작일로 고른다. */
-async function addHabit(page: Page, name: string, startDate?: string) {
+/** '습관 등록' 폼을 열어 등록한다. startDate를 넘기면 그 날을 시작일로, color(견본 이름)를 넘기면 그 색을 고른다. */
+async function addHabit(page: Page, name: string, startDate?: string, color?: string) {
   await addButton(page).click()
   await addForm(page).getByLabel('이름').fill(name)
   if (startDate !== undefined) await addForm(page).getByLabel('시작일').fill(startDate)
+  if (color !== undefined) await addForm(page).getByRole('radio', { name: color }).check()
   await addForm(page).getByRole('button', { name: '등록', exact: true }).click()
   await expect(page.getByRole('heading', { level: 2, name })).toBeVisible()
 }
@@ -215,7 +216,9 @@ test('매월 1일에 오늘을 체크하지 않았으면 달성률 0% (0/1일)�
 
 // 시작일
 
-function storedHabit(page: Page): Promise<{ name: string; createdDate: string; completedDates: string[] }> {
+function storedHabit(
+  page: Page,
+): Promise<{ name: string; createdDate: string; completedDates: string[]; color?: string }> {
   return page.evaluate(() => JSON.parse(localStorage.getItem('oneuldo') ?? 'null')?.habits[0])
 }
 
@@ -223,11 +226,12 @@ function editForm(page: Page) {
   return page.locator('.detail .habit-form')
 }
 
-/** '수정'을 열어 넘긴 칸만 바꾸고 저장한다. */
-async function editHabit(page: Page, changes: { name?: string; startDate?: string }) {
+/** '수정'을 열어 넘긴 칸만 바꾸고 저장한다. color는 견본 이름이다. */
+async function editHabit(page: Page, changes: { name?: string; startDate?: string; color?: string }) {
   await page.getByRole('button', { name: '수정' }).click()
   if (changes.name !== undefined) await editForm(page).getByLabel('이름').fill(changes.name)
   if (changes.startDate !== undefined) await editForm(page).getByLabel('시작일').fill(changes.startDate)
+  if (changes.color !== undefined) await editForm(page).getByRole('radio', { name: changes.color }).check()
   await editForm(page).getByRole('button', { name: '저장' }).click()
 }
 
@@ -521,4 +525,178 @@ test('저장에 실패하면 열려 있던 등록·수정 폼을 닫고 두 버�
   await expect(addButton(page)).toBeDisabled()
   await expect(page.getByRole('button', { name: '수정' })).toBeDisabled()
   await expect(page.locator('.habit-item')).toHaveCount(1)
+})
+
+// 습관 색
+
+const PALETTE = ['노랑', '분홍', '초록', '하늘', '주황', '보라']
+
+type SeedHabit = { name: string; color?: string; completedDates?: string[] }
+
+/** 여러 습관을 직접 넣고 새로고침한다. color를 빼면 색 정보 없는 습관이 된다. */
+async function seedHabits(page: Page, habits: SeedHabit[], version = 2) {
+  const data = {
+    version,
+    habits: habits.map(({ name, color, completedDates = [] }, index) => ({
+      id: `seed-${index}`,
+      name,
+      createdDate: MONTH_START,
+      completedDates,
+      ...(color === undefined ? {} : { color }),
+    })),
+  }
+  await page.evaluate((json) => localStorage.setItem('oneuldo', json), JSON.stringify(data))
+  await page.reload()
+}
+
+function calendar(page: Page) {
+  return page.locator('.calendar')
+}
+
+test('등록 폼에 6가지 색 견본이 팔레트 순서로 있고, 안 쓴 색 중 첫 색이 골라져 있다', async ({ page }) => {
+  await addButton(page).click()
+  const swatches = addForm(page).getByRole('radio')
+  await expect(swatches).toHaveCount(6)
+  for (const [index, name] of PALETTE.entries()) {
+    await expect(swatches.nth(index)).toHaveAttribute('title', name)
+  }
+  // 습관이 없으면 노랑
+  await expect(addForm(page).getByRole('radio', { name: '노랑' })).toBeChecked()
+
+  // 누른 견본이 고른 상태가 된다.
+  await addForm(page).getByRole('radio', { name: '하늘' }).check()
+  await expect(addForm(page).getByRole('radio', { name: '하늘' })).toBeChecked()
+  await expect(addForm(page).getByRole('radio', { name: '노랑' })).not.toBeChecked()
+  await addForm(page).getByRole('button', { name: '취소' }).click()
+
+  // 초록 하나만 쓰고 있으면 노랑, 노랑·초록이면 분홍
+  await addHabit(page, '물 마시기', undefined, '초록')
+  await addButton(page).click()
+  await expect(addForm(page).getByRole('radio', { name: '노랑' })).toBeChecked()
+  await addForm(page).getByRole('button', { name: '취소' }).click()
+  await addHabit(page, '책 읽기')
+  await addButton(page).click()
+  await expect(addForm(page).getByRole('radio', { name: '분홍' })).toBeChecked()
+})
+
+test('6가지 색을 모두 쓰고 있으면 가장 적게 쓰인 색 중 첫 색을 골라 둔다', async ({ page }) => {
+  await seedHabits(page, [
+    { name: '물 마시기', color: 'yellow' },
+    { name: '책 읽기', color: 'pink' },
+    { name: '스트레칭', color: 'pink' },
+    { name: '일기 쓰기', color: 'green' },
+    { name: '산책', color: 'sky' },
+    { name: '명상', color: 'orange' },
+    { name: '영어 공부', color: 'purple' },
+  ])
+  await addButton(page).click()
+  await expect(addForm(page).getByRole('radio', { name: '노랑' })).toBeChecked()
+})
+
+test('고른 색으로 등록하면 오늘 체크 원과 달력이 그 색이 되고, 새로고침해도 유지된다', async ({ page }) => {
+  await addHabit(page, '물 마시기', MONTH_START, '분홍')
+  const toggle = todayToggle(page, '물 마시기')
+  await expect(toggle).toHaveClass(/pen--pink/)
+  await expect(toggle).not.toHaveClass(/--done/)
+
+  await toggle.click()
+  await dayButton(page, YESTERDAY).click()
+  await expect(toggle).toHaveClass(/today-toggle--done/)
+  await expect(calendar(page)).toHaveClass(/pen--pink/)
+  await expect(dayButton(page, YESTERDAY)).toHaveClass(/day--join-next/)
+  await expect(dayButton(page, TODAY)).toHaveClass(/day--join-prev/)
+
+  // 이미 쓰인 색도 고를 수 있다.
+  await addHabit(page, '책 읽기', undefined, '분홍')
+  await expect(todayToggle(page, '책 읽기')).toHaveClass(/pen--pink/)
+  await addHabit(page, '스트레칭', undefined, '보라')
+  await expect(calendar(page)).toHaveClass(/pen--purple/)
+  await habitSelectButton(page, '물 마시기').click()
+  await expect(calendar(page)).toHaveClass(/pen--pink/)
+
+  await page.reload()
+
+  await expect(todayToggle(page, '물 마시기')).toHaveClass(/pen--pink/)
+  await expect(todayToggle(page, '책 읽기')).toHaveClass(/pen--pink/)
+  await expect(todayToggle(page, '스트레칭')).toHaveClass(/pen--purple/)
+  await expect(calendar(page)).toHaveClass(/pen--pink/)
+  await expect(page.locator('.error-banner')).toHaveCount(0)
+})
+
+test('수정에서 색을 바꾸면 목록과 달력이 새 색이 되고 이름·시작일·기록은 그대로다', async ({ page }) => {
+  await seedHabits(page, [{ name: '물 마시기', color: 'yellow', completedDates: [YESTERDAY, TODAY] }])
+  await page.getByRole('button', { name: '수정' }).click()
+  const form = editForm(page)
+  await expect(form.getByRole('radio')).toHaveCount(6)
+  await expect(form.getByRole('radio', { name: '노랑' })).toBeChecked()
+
+  // 색을 바꿨어도 시작일이 틀리면 아무것도 저장하지 않는다.
+  await form.getByRole('radio', { name: '초록' }).check()
+  await form.getByLabel('시작일').fill('2026-03-19')
+  await form.getByRole('button', { name: '저장' }).click()
+  await expect(form).toContainText('시작일은 오늘 이후로 정할 수 없어요.')
+  await expect(todayToggle(page, '물 마시기')).toHaveClass(/pen--yellow/)
+
+  // 취소해도 바뀌지 않는다.
+  await form.getByRole('button', { name: '취소' }).click()
+  await expect(todayToggle(page, '물 마시기')).toHaveClass(/pen--yellow/)
+  await expect(calendar(page)).toHaveClass(/pen--yellow/)
+  expect(await storedHabit(page)).toMatchObject({ color: 'yellow' })
+
+  await editHabit(page, { color: '초록' })
+  await expect(editForm(page)).toHaveCount(0)
+  await expect(todayToggle(page, '물 마시기')).toHaveClass(/pen--green/)
+  await expect(calendar(page)).toHaveClass(/pen--green/)
+  await expect(page.getByRole('heading', { level: 2, name: '물 마시기' })).toBeVisible()
+  await expect(dayButton(page, MONTH_START)).toHaveClass(/day--start/)
+  await expect(dayButton(page, TODAY)).toHaveClass(/--done/)
+  await expect(currentStreak(page)).toHaveText('2일')
+  expect(await storedHabit(page)).toMatchObject({
+    name: '물 마시기',
+    createdDate: MONTH_START,
+    completedDates: [YESTERDAY, TODAY],
+    color: 'green',
+  })
+
+  await page.getByRole('button', { name: '수정' }).click()
+  await expect(editForm(page).getByRole('radio', { name: '초록' })).toBeChecked()
+})
+
+test('색 정보 없는 기존 데이터는 등록순으로 팔레트 색을 받고, 불러오기만으로는 저장하지 않는다', async ({ page }) => {
+  const names = ['물 마시기', '책 읽기', '스트레칭', '일기 쓰기', '산책', '명상', '영어 공부']
+  await seedHabits(
+    page,
+    names.map((name) => ({ name, completedDates: [YESTERDAY] })),
+    1,
+  )
+
+  await expect(page.locator('.error-banner')).toHaveCount(0)
+  const colors = ['yellow', 'pink', 'green', 'sky', 'orange', 'purple', 'yellow']
+  for (const [index, name] of names.entries()) {
+    await expect(todayToggle(page, name)).toHaveClass(new RegExp(`pen--${colors[index]}`))
+  }
+  await expect(dayButton(page, YESTERDAY)).toHaveClass(/--done/)
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('oneuldo') ?? 'null').version)).toBe(1)
+
+  await todayToggle(page, '물 마시기').click()
+  await expect(todayToggle(page, '물 마시기')).toHaveClass(/--done/)
+  const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('oneuldo') ?? 'null'))
+  expect(stored.version).toBe(2)
+  expect(stored.habits.map((habit: { color: string }) => habit.color)).toEqual(colors)
+})
+
+test('팔레트에 없는 색 값이 저장돼 있으면 오류를 보이고 편집을 막으며 데이터를 덮어쓰지 않는다', async ({ page }) => {
+  await seedHabits(page, [
+    { name: '물 마시기', color: 'yellow' },
+    { name: '책 읽기', color: 'red' },
+  ])
+  const raw = await page.evaluate(() => localStorage.getItem('oneuldo'))
+
+  await expect(page.locator('.error-banner')).toContainText('저장된 데이터를 읽을 수 없어요.')
+  await expect(addButton(page)).toHaveCount(0)
+  await expect(page.locator('.today-toggle')).toHaveCount(0)
+
+  await page.getByRole('button', { name: '다시 불러오기' }).click()
+  await expect(page.locator('.error-banner')).toBeVisible()
+  expect(await page.evaluate(() => localStorage.getItem('oneuldo'))).toBe(raw)
 })
