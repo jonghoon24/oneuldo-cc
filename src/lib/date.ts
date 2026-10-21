@@ -92,6 +92,13 @@ export function formatFullDate(key: string): string {
   return `${year}년 ${month}월 ${day}일 ${weekday}요일`
 }
 
+/** 예: 9월 28일 월요일 */
+export function formatMonthDay(key: string): string {
+  const { month, day } = parseDateKey(key)
+  const weekday = WEEKDAY_NAMES[dateFromKey(key).getDay()]
+  return `${month}월 ${day}일 ${weekday}요일`
+}
+
 /** 예: 2026년 9월 */
 export function formatMonth(monthKey: string): string {
   const [year, month] = monthKey.split('-').map(Number)

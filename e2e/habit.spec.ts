@@ -239,13 +239,15 @@ test('시작일을 지정하지 않으면 오늘이 시작일이 되어 어제�
   await expect(dayButton(page, YESTERDAY)).toBeDisabled()
   await expect(monthlyRate(page)).toHaveText('달성률 0% (0/1일)')
   await expect(page.locator('.calendar__prev')).toBeDisabled()
-  await expect(page.locator('.calendar__legend')).toContainText('시작일')
+  // 범례 없이 칸 안의 글자로 오늘을 알린다.
+  await expect(dayButton(page, TODAY)).toContainText('오늘')
 })
 
 test('등록할 때 지난 날짜를 시작일로 고르면 그 날부터 체크할 수 있다', async ({ page }) => {
   await addHabit(page, '물 마시기', '2026-03-10')
 
   await expect(dayButton(page, '2026-03-10')).toHaveClass(/day--start/)
+  await expect(dayButton(page, '2026-03-10')).toContainText('시작')
   await expect(dayButton(page, '2026-03-09')).toBeDisabled()
   await expect(monthlyRate(page)).toHaveText('달성률 0% (0/9일)')
 

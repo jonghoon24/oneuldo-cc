@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { EditResult } from '../hooks/useHabitStore'
+import { isCheckableDate } from '../lib/startDate'
 import { currentStreak } from '../lib/streak'
 import type { Habit } from '../lib/storage'
 import { Calendar } from './Calendar'
@@ -20,7 +21,15 @@ export function HabitDetail({ habit, today, canEdit, onEdit, onDelete, onToggle 
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [prevCanEdit, setPrevCanEdit] = useState(canEdit)
 
-  const streak = currentStreak(new Set(habit.completedDates), today)
+  const completed = new Set(habit.completedDates)
+  const streak = currentStreak(completed, today)
+  // 오늘을 아직 체크하지 않았으면 체크했을 때 몇 일이 되는지 알려준다.
+  const streakHint =
+    !completed.has(today) && isCheckableDate(today, habit.createdDate, today)
+      ? streak > 0
+        ? `오늘 체크하면 ${streak + 1}일이 돼요`
+        : '오늘 체크하면 1일부터 시작해요'
+      : null
 
   // 저장 오류로 편집이 막히면 열려 있던 편집 UI를 닫는다.
   if (canEdit !== prevCanEdit) {
@@ -34,8 +43,30 @@ export function HabitDetail({ habit, today, canEdit, onEdit, onDelete, onToggle 
   return (
     <article className="detail">
       <header className="detail__header">
-        <h2 className="detail__title">{habit.name}</h2>
-        {editing ? (
+        <div className="detail__heading">
+          <h2 className="detail__title">{habit.name}</h2>
+          {!editing && (
+            <div className="button-row">
+              <button
+                type="button"
+                className="button button--small"
+                onClick={() => setEditing(true)}
+                disabled={!canEdit}
+              >
+                수정
+              </button>
+              <button
+                type="button"
+                className="button button--small button--danger-outline"
+                onClick={() => setConfirmingDelete(true)}
+                disabled={!canEdit}
+              >
+                삭제
+              </button>
+            </div>
+          )}
+        </div>
+        {editing && (
           <HabitForm
             initialName={habit.name}
             initialStartDate={habit.createdDate}
@@ -44,31 +75,15 @@ export function HabitDetail({ habit, today, canEdit, onEdit, onDelete, onToggle 
             onSubmit={(name, startDate) => onEdit(habit.id, name, startDate)}
             onClose={() => setEditing(false)}
           />
-        ) : (
-          <div className="button-row">
-            <button
-              type="button"
-              className="button"
-              onClick={() => setEditing(true)}
-              disabled={!canEdit}
-            >
-              수정
-            </button>
-            <button
-              type="button"
-              className="button button--danger-outline"
-              onClick={() => setConfirmingDelete(true)}
-              disabled={!canEdit}
-            >
-              삭제
-            </button>
-          </div>
         )}
       </header>
 
       <div className="streak">
-        <span className="streak__label">현재 연속</span>
-        <span className="streak__value">{streak}일</span>
+        <p className="streak__line">
+          <span className="streak__label">연속</span>
+          <span className="streak__value">{streak}일</span>
+        </p>
+        {streakHint && <p className="streak__hint">{streakHint}</p>}
       </div>
 
       <Calendar habit={habit} today={today} canEdit={canEdit} onToggle={(date) => onToggle(habit.id, date)} />

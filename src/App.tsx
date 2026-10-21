@@ -7,7 +7,8 @@ import { HabitList } from './components/HabitList'
 import { StorageNotice } from './components/StorageNotice'
 import { useHabitStore } from './hooks/useHabitStore'
 import { useToday } from './hooks/useToday'
-import { formatFullDate } from './lib/date'
+import { formatMonthDay } from './lib/date'
+import { isCheckableDate } from './lib/startDate'
 
 export default function App() {
   const today = useToday()
@@ -28,6 +29,11 @@ export default function App() {
     if (!canEdit) setAdding(false)
   }
 
+  // 오늘 체크할 수 있는 습관만 센다. 시작일이 오늘보다 늦은 습관은 빠진다.
+  const todayHabits = habits.filter((habit) => isCheckableDate(today, habit.createdDate, today))
+  const doneTodayCount = todayHabits.filter((habit) => habit.completedDates.includes(today)).length
+  const allDoneToday = todayHabits.length > 0 && doneTodayCount === todayHabits.length
+
   const handleAdd = (name: string, startDate: string) => {
     const result = addHabit(name, startDate)
     if (result.ok) setSelectedId(result.id)
@@ -45,24 +51,26 @@ export default function App() {
     <div className="app">
       <header className="app-header">
         <h1 className="app-header__title">오늘도</h1>
-        <p className="app-header__today">
-          <span className="app-header__today-label">오늘</span> {formatFullDate(today)}
-        </p>
       </header>
-
-      <StorageNotice />
 
       {state.status === 'error' && <ErrorBanner reason={state.reason} onReload={reload} />}
 
       {data && (
         <main className="layout">
-          <section className="panel panel--list">
+          <section className="panel panel--list today">
             <div className="panel__header">
-              <h2 className="panel__title">습관 목록</h2>
+              <div className="today__heading">
+                <h2 className="today__date">{formatMonthDay(today)}</h2>
+                {todayHabits.length > 0 && (
+                  <p className={allDoneToday ? 'today__progress today__progress--complete' : 'today__progress'}>
+                    {allDoneToday ? '오늘도 다 했어요' : `${todayHabits.length}개 중 ${doneTodayCount}개 했어요`}
+                  </p>
+                )}
+              </div>
               {!adding && (
                 <button
                   type="button"
-                  className="button button--primary"
+                  className="button"
                   onClick={() => setAdding(true)}
                   disabled={!canEdit}
                 >
@@ -81,7 +89,7 @@ export default function App() {
                 onClose={() => setAdding(false)}
               />
             )}
-            {habits.length > 0 && (
+            {habits.length > 0 ? (
               <HabitList
                 habits={habits}
                 selectedId={selected?.id ?? null}
@@ -90,11 +98,13 @@ export default function App() {
                 onSelect={setSelectedId}
                 onToggleToday={(id) => toggleDate(id, today)}
               />
+            ) : (
+              !adding && <EmptyState disabled={!canEdit} onStart={() => setAdding(true)} />
             )}
           </section>
 
-          <div className="panel panel--detail">
-            {selected ? (
+          {selected && (
+            <div className="panel panel--detail">
               <HabitDetail
                 key={selected.id}
                 habit={selected}
@@ -104,12 +114,14 @@ export default function App() {
                 onDelete={handleDelete}
                 onToggle={toggleDate}
               />
-            ) : (
-              <EmptyState disabled={!canEdit} onStart={() => setAdding(true)} />
-            )}
-          </div>
+            </div>
+          )}
         </main>
       )}
+
+      <footer className="app-footer">
+        <StorageNotice />
+      </footer>
     </div>
   )
 }
